@@ -1,0 +1,27 @@
+{
+    "name": "DBHealth",
+    "description": "This plugin will help you analyze you database health",
+    "version": "0.1.0",
+    "theme": false,
+    "require": {
+        "piwik": ">=3.14.1-stable,<4.0.0-b1"
+    },
+    "authors": [
+        {
+            "name": "Digitalist",
+            "email": "se.support@digitalistgroup.com",
+            "homepage": "https://digitalist.se"
+        },
+        {
+            "name": "Tomas Persson",
+            "email": "tomas.persson@digitalistgroup.com",
+            "homepage": "https://digitalist.se"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/digitalist-se/DBHealth/issues"
+    },
+    "homepage": "",
+    "license": "GPL v3+",
+    "keywords": []
+}

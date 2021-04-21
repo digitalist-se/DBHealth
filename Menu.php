@@ -29,6 +29,7 @@ class Menu extends \Piwik\Plugin\Menu
         $menu->addItem('DB Health', "Status variables", $this->urlForAction('getMysqlStatus'));
         $menu->addItem('DB Health', "Seting variables", $this->urlForAction('getMysqlVariableData'));
         $menu->addItem('DB Health', "Show Table status", $this->urlForAction('getMysqlTableStatus'));
+        $menu->addItem('DB Health', "Run performance analyzes", $this->urlForAction('getPerfChecks'));
     }
 
     }

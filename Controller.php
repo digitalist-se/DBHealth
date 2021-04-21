@@ -10,6 +10,7 @@ namespace Piwik\Plugins\DBHealth;
 use Piwik\Db;
 use Piwik\Log;
 use Piwik\Piwik;
+use Piwik\Config;
 use Piwik\View;
 use Piwik\Access;
 use Piwik\Common;
@@ -33,6 +34,56 @@ class Controller extends \Piwik\Plugin\Controller
         return null;
     }
 
+
+    public function showStatus()
+    {
+        $db = new Db();
+        $query = "SHOW STATUS";
+        return $db::fetchAll($query);
+    }
+
+    public function showVariables()
+    {
+        $db = new Db();
+        $query = "SHOW VARIABLES";
+        return $db::fetchAll($query);
+    }
+    public function test($where = null)
+    {
+
+        $db = new Db();
+
+        $tableName = Common::prefixTable('user_feedback_results');
+        $statement = $where? "WHERE {$where}" : "";
+        $query = "SELECT * FROM {$tableName} as feedbacks {$statement}";
+        return $db::fetchAll($query);
+    }
+
+       public function diskCheck()
+    {
+           var = $this->showVariables();
+           stat = $this->showStatus();
+    }
+
+
+    public function getPerfChecks() {
+        $api = new DBHealthAPI();
+        Piwik::checkUserHasSuperUserAccess();
+        //echo "DB Connection " . $api->dbConnectTest() . " milliseconds\n";
+        //print_r($this->test());
+
+        return $this->renderTemplate('perfreport',
+            [   'db_connection' =>  $api->dbConnectTest(),
+                'status' => $this->showStatus(),
+                'variables' => $this->showVariables()
+            ]
+        );
+
+
+
+
+        ;
+    }
 
     public function getMysqlTableStatus() {
         //Log::debug("A user accessed getMysqlVariableData()");

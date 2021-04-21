@@ -1,0 +1,19 @@
+{% extends 'admin.twig' %}
+{% block content %}
+
+<p>Database connection took {{ db_connection }} milliseconds</p>
+
+{% for var in variables %}
+<div class="row">
+        {{ var.Variable_name }}
+        {{ var.Value }}
+</div>
+{% endfor %}
+{% for stat in status %}
+<div class="row">
+        {{ stat.Variable_name }}
+        {{ stat.Value }}
+
+</div>
+{% endfor %}
+{% endblock %}

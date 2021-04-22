@@ -26,10 +26,10 @@ class Menu extends \Piwik\Plugin\Menu
     {
     if (Piwik::hasUserSuperUserAccess()) {
 
-        $menu->addItem('DB Health', "Status variables", $this->urlForAction('getMysqlStatus'));
-        $menu->addItem('DB Health', "Seting variables", $this->urlForAction('getMysqlVariableData'));
-        $menu->addItem('DB Health', "Show Table status", $this->urlForAction('getMysqlTableStatus'));
-        $menu->addItem('DB Health', "Run performance analyzes", $this->urlForAction('getPerfChecks'));
+        $menu->addItem('DB Health', "DB Status variables", $this->urlForAction('getMysqlStatus'));
+        $menu->addItem('DB Health', "DB Setting variables", $this->urlForAction('getMysqlVariableData'));
+        $menu->addItem('DB Health', "Show database table status", $this->urlForAction('getMysqlTableStatus'));
+        $menu->addItem('DB Health', "Run performance calculations", $this->urlForAction('getPerfChecks'));
     }
 
     }

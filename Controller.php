@@ -266,16 +266,16 @@ class Controller extends \Piwik\Plugin\Controller
         }
         //Status
         foreach ($stat as $item) {
-            if($item['Variable_name'] == 'qcache_free_memory') {
+            if($item['Variable_name'] == 'Qcache_free_memory') {
                 $qcache_free_memory = $item['Value'];
             }
-            if($item['Variable_name'] == 'qcache_used_memory') {
+            if($item['Variable_name'] == 'Qcache_used_memory') {
                 $qcache_used_memory = $item['Value'];
             }
-            if($item['Variable_name'] == 'qcache_free_blocks') {
+            if($item['Variable_name'] == 'Qcache_free_blocks') {
                 $qcache_free_blocks = $item['Value'];
             }
-            if($item['Variable_name'] == 'qcache_total_blocks') {
+            if($item['Variable_name'] == 'Qcache_total_blocks') {
                 $qcache_total_blocks = $item['Value'];
             }
 
@@ -297,17 +297,17 @@ class Controller extends \Piwik\Plugin\Controller
 
             }
             if ($qcache_percent_fragmentedHR > 20) {
-                $msgFrag = "Query Cache is " . $qcache_percent_fragmentedHR . " % fragmented<br>";
+                $msgFrag = "Query Cache is " . round($qcache_percent_fragmentedHR,2) . " % fragmented<br>";
                 $msgFrag = $msgFrag . "Run <b>FLUSH QUERY CACHE</b> periodically to defragment the query cache memory<br>";
                 $msgFrag = $msgFrag . "If you have many small queries lower 'query_cache_min_res_unit' to reduce fragmentation.";
             }
             else {
-                $msgFrag = "Fragmentation seems fine, Query Cache is " . $qcache_percent_fragmented . " % fragmented";
+                $msgFrag = "Fragmentation seems fine, Query Cache is " . round($qcache_percent_fragmented,2) . " % fragmented";
 
             }
             if ( $qcache_mem_fill_ratioHR <= 25) {
-                $msgUnused = "Your query_cache_size <b>(".  $query_cache_size. ")</b> seems to be too high  <br>";
-                $msgUnused = $msgUnused . "The fill ratio is" . $qcache_mem_fill_ratioHR . " %<br>";
+                $msgUnused = "Your query_cache_size (".  round($query_cache_size/ 1024 / 1024,2) . " MB) might to be too high (but if your system was recently restarded you might want to wait and see what happends) <br>";
+                $msgUnused = $msgUnused . "The memory fill ratio is " . round($qcache_mem_fill_ratioHR,2) . " %<br>";
                 $msgUnused = $msgUnused . "Perhaps you can use these resources elsewhere";
             }
             if ($qcache_lowmem_prunes >= 50 && $qcache_mem_fill_ratioHR >= 80) {
@@ -315,9 +315,11 @@ class Controller extends \Piwik\Plugin\Controller
                 $msgSize = $msgSize ."due to lack of memory. <br> Perhaps you should raise query_cache_size";
 
             }
-            $msg = "Query_cache_size : " . $query_cache_size . "<br>";
-            $msg .= "Qcache_free_memory : " . $qcache_free_memory . "<br>";
-            $msg .= "Query_cache_size : " . $qcache_free_memory . "<br>";
+            else {
+                $msgSize = "Number of querys that has been removed from cache due to lack of memory (Qcache_lowmem_prunes) = " . $qcache_lowmem_prunes;
+            }
+            $msg = "Query_cache_size : " .  round($query_cache_size/ 1024 / 1024,2) . " MB<br>";
+            $msg .= "Qcache_free_memory : " .  round($qcache_free_memory/ 1024 / 1024,2) . " MB<br>";
 
 
         }

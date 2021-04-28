@@ -542,7 +542,9 @@ class Controller extends \Piwik\Plugin\Controller
      */
     public function getPerfChecks() {
         $api = new DBHealthAPI();
-        opcache_invalidate('/opt/lampp/htdocs/matomo/plugins/DBHealth/Controller.php');
+
+        //Only for local dev
+        //opcache_invalidate('/opt/lampp/htdocs/matomo/plugins/DBHealth/Controller.php');
         return $this->renderTemplate(
             'perfreport',
             [
@@ -573,7 +575,7 @@ class Controller extends \Piwik\Plugin\Controller
 
     public function getXdebugStatus() {
         if (!extension_loaded('xdebug')) {
-            return "<span class=''>X11debug is not enabled, this is what you want in a production environment (since Xdebug will slow you application down).</span>";
+            return "<span class=''>Xdebug is not enabled, this is what you want in a production environment (since Xdebug will slow you application down).</span>";
         }
         else
             return "<span class=''>Xdebug is enabled, this is not good in a production environment (since Xdebug will slow you application down).</span>";

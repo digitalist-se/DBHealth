@@ -1,47 +1,59 @@
+
 {% extends 'admin.twig' %}
 {% block content %}
+<head>
+<meta http-equiv="Cache-Control" content="max-age=0, s-max-age=0, no-cache, no-store, must-revalidate', true" />
+<meta http-equiv="Pragma" content="no-cache" />
+
+</head>
 <h1>Matomo DB performance analyzes</h1>
 <p>This page will run a few (light weight) sql querys and present some guidance regarding your SQL Database<br>
     Most of the calculations are PHP rewrites of the legendary tuning-primer.sh  Writen by: Matthew Montgomery
     <a target="_blank" href="https://bugs.launchpad.net/mysql-tuning-primer">https://bugs.launchpad.net/mysql-tuning-primer</a></p>
 <h2>Memory usage</h2>
-<p>{{ memUsage.msg1 | raw}}</p>
+<p>{{ memUsage.msg1 | rawSafeDecoded}}</p>
 
 <!--
 {% if opCacheEnabled == false %}
     <p>Opcache is not enabled, make sure you load the zend_extension=opcache.so in you php.ini</p>
 {% else %}
     {% if opCacheStatus.directives.opcache.memory_consumption is defined %}
-    <p>cache_full: {{ opCacheStatus.directives.opcache.cache_full | raw}}</p>
-    <p>restart_pending: {{ opCacheStatus.directives.opcache.restart_pending | raw}}</p>
-    <p>restart_in_progress: {{ opCacheStatus.directives.opcache.restart_in_progress | raw}}</p>
-    <p>used_memory: {{ opCacheStatus.directives.opcache.memory_usage.used_memory | raw}}</p>
-    <p>used_memory: {{ opCacheStatus.directives.opcache.memory_usage.used_memory | raw}}</p>
-    <p>free_memory: {{ opCacheStatus.directives.opcache.memory_usage.free_memory | raw}}</p>
-    <p>wasted_memory: {{ opCacheStatus.directives.opcache.memory_usage.wasted_memory | raw}}</p>
-    <p>current_wasted_percentage: {{ opCacheStatus.directives.opcache.memory_usage.current_wasted_percentage | raw}}</p>
+    <p>cache_full: {{ opCacheStatus.directives.opcache.cache_full | rawSafeDecoded}}</p>
+    <p>restart_pending: {{ opCacheStatus.directives.opcache.restart_pending | rawSafeDecoded}}</p>
+    <p>restart_in_progress: {{ opCacheStatus.directives.opcache.restart_in_progress | rawSafeDecoded}}</p>
+    <p>used_memory: {{ opCacheStatus.directives.opcache.memory_usage.used_memory | rawSafeDecoded}}</p>
+    <p>used_memory: {{ opCacheStatus.directives.opcache.memory_usage.used_memory | rawSafeDecoded}}</p>
+    <p>free_memory: {{ opCacheStatus.directives.opcache.memory_usage.free_memory | rawSafeDecoded}}</p>
+    <p>wasted_memory: {{ opCacheStatus.directives.opcache.memory_usage.wasted_memory | rawSafeDecoded}}</p>
+    <p>current_wasted_percentage: {{ opCacheStatus.directives.opcache.memory_usage.current_wasted_percentage | rawSafeDecoded}}</p>
     {% endif %}
 {% endif %}
 -->
 <h2>Network</h2>
 <p>Database connection sample took {{ db_connection }} milliseconds</p>
 <h2>Temporary tables</h2>
-<p>{{ msg | raw}}</p>
+<p>{{ msg | rawSafeDecoded}}</p>
 
 <h2>Query Cache</h2>
-<p>{{ queryCacheCheck.msg | raw}}</p>
-<p>{{ queryCacheCheck.msgFrag | raw}}</p>
-<p>{{ queryCacheCheck.msgUnused | raw}}</p>
-<p>{{ queryCacheCheck.msgSize | raw}}</p>
+<p>{{ queryCacheCheck.msg | rawSafeDecoded}}</p>
+<p>{{ queryCacheCheck.msgFrag | rawSafeDecoded}}</p>
+<p>{{ queryCacheCheck.msgUnused | rawSafeDecoded}}</p>
+<p>{{ queryCacheCheck.msgSize | rawSafeDecoded}}</p>
 
 <h2>Innodb Buffer pool</h2>
-<p>{{ getBufferpoolTest.message1 | raw}}</p>
+<p>{{ getBufferpoolTest.message1 | rawSafeDecoded}}</p>
 
 
 <h2>PHP Checks</h2>
-<p>getPhpRealpathCacheUsage: {{ getPhpRealpathCacheUsage | raw}} MB</p>
-<p>realpath_cache_size: {{ getPhpRealpathCacheSettings.realpath_cache_size | raw}}</p>
-<p>realpath_cache_ttl: {{ getPhpRealpathCacheSettings.realpath_cache_ttl | raw}}</p>
+<p>getPhpRealpathCacheUsage: {{ getPhpRealpathCacheUsage | rawSafeDecoded}} MB</p>
+<p>realpath_cache_size: {{ getPhpRealpathCacheSettings.realpath_cache_size | rawSafeDecoded}}</p>
+<p>realpath_cache_ttl: {{ getPhpRealpathCacheSettings.realpath_cache_ttl | rawSafeDecoded}}</p>
+<p>memory_limit: {{ phpInfo.memory_limit | rawSafeDecoded}}</p>
+<p>post_max_size: {{ phpInfo.post_max_size | rawSafeDecoded}}</p>
+<p>upload_max_filesize: {{ phpInfo.upload_max_filesize | rawSafeDecoded}}</p>
+<p>max_execution_time: {{ phpInfo.max_execution_time | rawSafeDecoded}}</p>
+<p>{{ phpInfo.xdebug_status | rawSafeDecoded}}</p>
+
 
 <h3>Opcache</h3>
 <p>Opcache is not part of the Database but since it might improve your Matomo  performance we include it here.</p>

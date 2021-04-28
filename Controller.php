@@ -138,11 +138,11 @@ class Controller extends \Piwik\Plugin\Controller
         $binlog_cache_size = 0;
 
 
-        $innodb_buffer_pool_size;
-        $innodb_additional_mem_pool_size;
-        $innodb_log_buffer_size;
-        $key_buffer_size;
-        $query_cache_size;
+        $innodb_buffer_pool_size= 0;
+        $innodb_additional_mem_pool_size= 0;
+        $innodb_log_buffer_size= 0;
+        $key_buffer_size = 0;
+        $query_cache_size= 0;
         //Status
         $max_used_connections = 0;
 
@@ -215,10 +215,10 @@ class Controller extends \Piwik\Plugin\Controller
         $per_thread_max_buffers = ($read_buffer_size + $read_rnd_buffer_size + $sort_buffer_size + $thread_stack + $join_buffer_size + $binlog_cache_size) * $max_used_connections;
 
 
-        $global_buffers= $innodb_buffer_pool_size + $innodb_additional_mem_pool_size + $innodb_log_buffer_size + $key_buffer_size+$query_cache_size;
+        $global_buffers = $innodb_buffer_pool_size + $innodb_additional_mem_pool_size + $innodb_log_buffer_size + $key_buffer_size + $query_cache_size;
 
-        $max_memory=$global_buffers+$per_thread_max_buffers;
-        $total_memory=$global_buffers+$per_thread_buffers;
+        $max_memory = $global_buffers + $per_thread_max_buffers;
+        $total_memory = $global_buffers + $per_thread_buffers;
 
 
         $msg1 = "Max Memory Ever Allocated : " .  round($max_memory/ 1024 / 1024,2) . " MB<br>";
@@ -406,7 +406,7 @@ class Controller extends \Piwik\Plugin\Controller
         $tmp_table_message .= "Created created_tmp_tables: " . $created_tmp_tables;
 
 
-        $result = ["msg" => $tmp_table_message];
+        $result = ["msg" => $tmp_table_message, "tmp_disk_tables" => $tmp_disk_tables, "created_tmp_tables" => $created_tmp_tables];
 
 
         return $result;
@@ -542,12 +542,11 @@ class Controller extends \Piwik\Plugin\Controller
      */
     public function getPerfChecks() {
         $api = new DBHealthAPI();
-        Common::sendHeader('Cache-Control: no-cache, must-revalidate');
-        Common::sendHeader('Pragma: no-cache');
-
+        opcache_invalidate('/opt/lampp/htdocs/matomo/plugins/DBHealth/Controller.php');
         return $this->renderTemplate(
             'perfreport',
-            [   'db_connection' =>  $this->dbStatus(),
+            [
+             'db_connection' =>  $this->dbStatus(),
              'msg' => $this->diskCheck()["msg"],
              'tmp_disk_tables' => $this->diskCheck()["tmp_disk_tables"],
              'created_tmp_tables' => $this->diskCheck()["created_tmp_tables"],
@@ -558,7 +557,7 @@ class Controller extends \Piwik\Plugin\Controller
              'opCacheEnabled' => $this->opCacheEnabled(),
              'getPhpRealpathCacheUsage' => $this->getPhpRealpathCacheUsage(),
              'getPhpRealpathCacheSettings' => $this->getPhpRealpathCacheSettings(),
-
+             'phpInfo' => $this->getPhpMemInfo()
             ]
         );
 
@@ -572,6 +571,25 @@ class Controller extends \Piwik\Plugin\Controller
         return $result;
     }
 
+    public function getXdebugStatus() {
+        if (!extension_loaded('xdebug')) {
+            return "<span class=''>X11debug is not enabled, this is what you want in a production environment (since Xdebug will slow you application down).</span>";
+        }
+        else
+            return "<span class=''>Xdebug is enabled, this is not good in a production environment (since Xdebug will slow you application down).</span>";
+    }
+    public function getPhpMemInfo() {
+        $result = [];
+
+
+        $result = ["memory_limit" => ini_get('memory_limit'),
+                   "post_max_size" => ini_get('post_max_size'),
+                   "upload_max_filesize" => ini_get('upload_max_filesize'),
+                   "max_execution_time" => ini_get('max_execution_time'),
+                   "xdebug_status" => $this->getXdebugStatus()
+                  ];
+        return $result;
+    }
 
 
 

@@ -24,6 +24,11 @@ class Menu extends \Piwik\Plugin\Menu
 
     public function configureAdminMenu(MenuAdmin $menu)
     {
+        Piwik::checkUserHasSomeAdminAccess();
+        if (!Piwik::hasUserSuperUserAccess()) {
+                throw new \Exception("No access to DBHealth");
+            Piwik::checkUserHasAdminAccess($initialIdSite);
+        }
     if (Piwik::hasUserSuperUserAccess()) {
 
         $menu->addItem('DB Health', "DB Status variables", $this->urlForAction('getMysqlStatus'));

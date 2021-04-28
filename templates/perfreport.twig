@@ -6,6 +6,23 @@
     <a target="_blank" href="https://bugs.launchpad.net/mysql-tuning-primer">https://bugs.launchpad.net/mysql-tuning-primer</a></p>
 <h2>Memory usage</h2>
 <p>{{ memUsage.msg1 | raw}}</p>
+
+<!--
+{% if opCacheEnabled == false %}
+    <p>Opcache is not enabled, make sure you load the zend_extension=opcache.so in you php.ini</p>
+{% else %}
+    {% if opCacheStatus.directives.opcache.memory_consumption is defined %}
+    <p>cache_full: {{ opCacheStatus.directives.opcache.cache_full | raw}}</p>
+    <p>restart_pending: {{ opCacheStatus.directives.opcache.restart_pending | raw}}</p>
+    <p>restart_in_progress: {{ opCacheStatus.directives.opcache.restart_in_progress | raw}}</p>
+    <p>used_memory: {{ opCacheStatus.directives.opcache.memory_usage.used_memory | raw}}</p>
+    <p>used_memory: {{ opCacheStatus.directives.opcache.memory_usage.used_memory | raw}}</p>
+    <p>free_memory: {{ opCacheStatus.directives.opcache.memory_usage.free_memory | raw}}</p>
+    <p>wasted_memory: {{ opCacheStatus.directives.opcache.memory_usage.wasted_memory | raw}}</p>
+    <p>current_wasted_percentage: {{ opCacheStatus.directives.opcache.memory_usage.current_wasted_percentage | raw}}</p>
+    {% endif %}
+{% endif %}
+-->
 <h2>Network</h2>
 <p>Database connection sample took {{ db_connection }} milliseconds</p>
 <h2>Temporary tables</h2>
@@ -21,7 +38,21 @@
 <p>{{ getBufferpoolTest.message1 | raw}}</p>
 
 
+<h2>PHP Checks</h2>
+<p>getPhpRealpathCacheUsage: {{ getPhpRealpathCacheUsage | raw}} MB</p>
+<p>realpath_cache_size: {{ getPhpRealpathCacheSettings.realpath_cache_size | raw}}</p>
+<p>realpath_cache_ttl: {{ getPhpRealpathCacheSettings.realpath_cache_ttl | raw}}</p>
 
+<h3>Opcache</h3>
+<p>Opcache is not part of the Database but since it might improve your Matomo  performance we include it here.</p>
+<table style="max-width: 600px;">
+    <thead><th>Name</th><th>Value</th></thead>
+    <tbody>
+        {% for key, op in opCacheStatus.directives %}
+        <tr><td>{{ key }}</td><td>{{op }}</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
 <h2>Mysql Performance Schema Output</h2>
 
 <table style="max-width: 600px;">

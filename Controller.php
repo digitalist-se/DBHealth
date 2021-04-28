@@ -86,6 +86,22 @@ class Controller extends \Piwik\Plugin\Controller
         return $db::fetchAll($query);
     }
 
+    public function opCacheStatus()
+    {
+        if (!extension_loaded('Zend OPcache')) {
+            return null;
+        }
+        else
+            return opcache_get_configuration();
+    }
+    public function opCacheEnabled()
+    {
+        if (!extension_loaded('Zend OPcache')) {
+            return false;
+        }
+        else
+            return true;
+    }
     /**
      * Return Database Status variables
      *
@@ -509,7 +525,7 @@ class Controller extends \Piwik\Plugin\Controller
 
         $message1 = "Current InnoDB index space = " . round($innodb_indexes/ 1024 / 1024,2) ." MB<br>";
         $message1 .=  "Current InnoDB data space = " . round($innodb_data/ 1024 / 1024,2) . " MB<br>";
-        $message1 .= "Current InnoDB buffer pool free = " . $percent_innodb_buffer_pool_free ." %<br>";
+        $message1 .= "Current InnoDB buffer pool free = " . round($percent_innodb_buffer_pool_free,2) ." %<br>";
         $message1 .= "Current innodb_buffer_pool_size = " . round($innodb_buffer_pool_size/ 1024 / 1024,2) ." MB<br>";
         $message1 .= "Depending on how much space your innodb indexes take up it may be safe<br>";
         $message1 .= "to increase innodb_buffer_pool_size value to up to 2 / 3 of total system memory<br>";
@@ -526,6 +542,8 @@ class Controller extends \Piwik\Plugin\Controller
      */
     public function getPerfChecks() {
         $api = new DBHealthAPI();
+        Common::sendHeader('Cache-Control: no-cache, must-revalidate');
+        Common::sendHeader('Pragma: no-cache');
 
         return $this->renderTemplate(
             'perfreport',
@@ -535,11 +553,27 @@ class Controller extends \Piwik\Plugin\Controller
              'created_tmp_tables' => $this->diskCheck()["created_tmp_tables"],
              'queryCacheCheck' => $this->queryCacheCheck(),
              'getBufferpoolTest' => $this->getBufferpoolTest(),
-             'memUsage' => $this->memUsage()
+             'memUsage' => $this->memUsage(),
+             'opCacheStatus' => $this->opCacheStatus(),
+             'opCacheEnabled' => $this->opCacheEnabled(),
+             'getPhpRealpathCacheUsage' => $this->getPhpRealpathCacheUsage(),
+             'getPhpRealpathCacheSettings' => $this->getPhpRealpathCacheSettings(),
+
             ]
         );
 
     }
+    public function getPhpRealpathCacheUsage() {
+        return round(realpath_cache_size()/ 1024 / 1024,2) ;
+    }
+    public function getPhpRealpathCacheSettings() {
+        $result = [];
+        $result = ["realpath_cache_size" => ini_get('realpath_cache_size') , "realpath_cache_ttl" => ini_get('realpath_cache_ttl')];
+        return $result;
+    }
+
+
+
 
     /**
      * Test db connection time and return time

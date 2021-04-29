@@ -34,6 +34,11 @@ class API extends \Piwik\Plugin\API
 
     public function getMysqlStatusData()
     {
+        if (!Piwik::hasUserSuperUserAccess()) {
+            throw new \Exception("No access to DBHealth");
+            Piwik::checkUserHasAdminAccess($initialIdSite);
+        }
+
         try {
             $dataTable = new DataTable();
 
@@ -60,6 +65,10 @@ class API extends \Piwik\Plugin\API
      * @return DataTable
      */
     public function getMysqlTableStatus() {
+        if (!Piwik::hasUserSuperUserAccess()) {
+            throw new \Exception("No access to DBHealth");
+            Piwik::checkUserHasAdminAccess($initialIdSite);
+        }
         try {
             $dataTable = new DataTable();
 
@@ -98,6 +107,10 @@ class API extends \Piwik\Plugin\API
      */
     public function getMysqlVariableData()
     {
+        if (!Piwik::hasUserSuperUserAccess()) {
+            throw new \Exception("No access to DBHealth");
+            Piwik::checkUserHasAdminAccess($initialIdSite);
+        }
         try {
             $dataTable = new DataTable();
 

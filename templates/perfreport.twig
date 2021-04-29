@@ -158,7 +158,13 @@
 <h3>Innodb Buffer pool</h3>
 <p>{{ getBufferpoolTest.message1 | rawSafeDecoded}}</p>
 <h2>PHP Checks</h2>
-<p>{{ phpInfo.xdebug_status | rawSafeDecoded}}</p>
+{% if phpInfo.xdebug_status %}
+<p class="alert alert-success">Xdebug is not enabled, this is good in a production environment (since Xdebug will slow you application down).</p>
+{% else %}
+<p class="alert alert-warning">"Xdebug is enabled, this will slow you application down and something you should be aware of. <br>
+Only enable Xdebug when you need it to troubleshoot your code.</p>
+{% endif %}
+
 
 <h3>PHP Realpath Cache</h3>
 <p>The realpath cache can be important for your system io, since if the cache is to low files needs to be read from disk wich affect the system io. PHP does not have a good way to show if this value is good or not, we can only see the current usage. This value will change all the time. You can laborate with this and perhaps see if your systems disk IO is affected (in your server monitoring system).</p>

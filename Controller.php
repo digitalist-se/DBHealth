@@ -638,10 +638,10 @@ class Controller extends \Piwik\Plugin\Controller
      */
     public function getXdebugStatus() {
         if (!extension_loaded('xdebug')) {
-            return "Xdebug is not enabled, this is what you want in a production environment (since Xdebug will slow you application down).";
+            return false;
         }
         else
-            return "Xdebug is enabled, this is not good in a production environment (since Xdebug will slow you application down).";
+            return true;
     }
 
     /**

@@ -127,7 +127,8 @@
 
 {% set q_hitrate = queryCacheCheck.qcache_hits / (queryCacheCheck.qcache_hits + queryCacheCheck.qcache_inserts )*100  %}
 {% if q_hitrate < 80 %}
-<p>Your Query Cache hit ratio is {{q_hitrate |round(2, 'ceil')}} %, this is to low.</p>
+<p class="alert alert-warning">Your Query Cache hit ratio is {{q_hitrate |round(2, 'ceil')}} %, this is to low. (should be above 80%)<br>
+However if your uptime is low this might be the reason, so make sure to wait untill your database has got enough traffic. </p>
 {% else %}
 <p class="alert alert-success">Your Query Cache hit ratio is {{q_hitrate |round(2, 'ceil')}} % which is fine<br>
 {% endif %}
@@ -165,9 +166,10 @@
 Only enable Xdebug when you need it to troubleshoot your code.</p>
 {% endif %}
 
-
 <h3>PHP Realpath Cache</h3>
-<p>The realpath cache can be important for your system io, since if the cache is to low files needs to be read from disk wich affect the system io. PHP does not have a good way to show if this value is good or not, we can only see the current usage. This value will change all the time. You can laborate with this and perhaps see if your systems disk IO is affected (in your server monitoring system).</p>
+<p>The realpath cache can be important for your system io, since if the cache is to low files needs to be read from disk wich will affect the system IO.<br>
+    PHP does not have a good way to show if this value is good or not, we can only see the current usage (without history), meaning this value will change all the time.<br>
+    You can experiment with this and perhaps see if your systems disk IO is affected (in your server monitoring system).</p>
 <ul>
     <li>Realpath CacheUsage: {{ getPhpRealpathCacheUsage | rawSafeDecoded}} MB</li>
     <li>realpath_cache_size: {{ getPhpRealpathCacheSettings.realpath_cache_size | rawSafeDecoded}}</li>

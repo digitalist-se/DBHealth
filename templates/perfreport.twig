@@ -1,68 +1,227 @@
 
 {% extends 'admin.twig' %}
+
 {% block content %}
-<h1>Matomo DB performance analyzes</h1>
-<p>This page will run a few (light weight) sql querys and present some guidance regarding your SQL Database<br>
-    Most of the calculations are PHP rewrites of the legendary tuning-primer.sh  Writen by: Matthew Montgomery
-    <a target="_blank" href="https://bugs.launchpad.net/mysql-tuning-primer">https://bugs.launchpad.net/mysql-tuning-primer</a></p>
-<h2>Memory usage</h2>
-<p>{{ memUsage.msg1 | rawSafeDecoded}}</p>
 
-<!--
-{% if opCacheEnabled == false %}
-    <p>Opcache is not enabled, make sure you load the zend_extension=opcache.so in you php.ini</p>
+<head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<style>
+    h1,h2,h3,h4 {
+        font-weight: 700;
+    }
+    h4 {
+        margin: 5px 0 5px; 0;
+    }
+    table {
+        max-width: 700px;
+    }
+    td, th {
+        border: 1px solid #999999;
+    }
+
+
+</style>
+</head>
+<div class="content">
+<h1>Matomo performance analyzes</h1>
+<p>This page will run a few functions to test your environment and present some guidance regarding your SQL Database and PHP Settings<br>
+    Some of the database calculations are PHP rewrites of the legendary tuning-primer.sh  Writen by: Matthew Montgomery
+    <a target="_blank" href="https://bugs.launchpad.net/mysql-tuning-primer">https://bugs.launchpad.net/mysql-tuning-primer</a><br>
+    If you find errors or if you have other suggestions for improvements, please report them here: <br>
+    <a href="https://github.com/digitalist-se/DBHealth/issues">https://github.com/digitalist-se/DBHealth/issues</a></p>
+<h2>Database</h2>
+{% set uptime = queryCacheCheck.uptime | round(0, 'ceil') %}
+{% if uptime < 86400 %}
+    <p class="alert alert-warning">Your database was restarted only {{ (uptime / 60) |round(0, 'ceil') }} minutes ago.<br>
+    Our calculation depend on that database status variables are correct and depending on your system load this can take some time. Make sure you come back again and check before you do any drastic actions. <br>
 {% else %}
-    {% if opCacheStatus.directives.opcache.memory_consumption is defined %}
-    <p>cache_full: {{ opCacheStatus.directives.opcache.cache_full | rawSafeDecoded}}</p>
-    <p>restart_pending: {{ opCacheStatus.directives.opcache.restart_pending | rawSafeDecoded}}</p>
-    <p>restart_in_progress: {{ opCacheStatus.directives.opcache.restart_in_progress | rawSafeDecoded}}</p>
-    <p>used_memory: {{ opCacheStatus.directives.opcache.memory_usage.used_memory | rawSafeDecoded}}</p>
-    <p>used_memory: {{ opCacheStatus.directives.opcache.memory_usage.used_memory | rawSafeDecoded}}</p>
-    <p>free_memory: {{ opCacheStatus.directives.opcache.memory_usage.free_memory | rawSafeDecoded}}</p>
-    <p>wasted_memory: {{ opCacheStatus.directives.opcache.memory_usage.wasted_memory | rawSafeDecoded}}</p>
-    <p>current_wasted_percentage: {{ opCacheStatus.directives.opcache.memory_usage.current_wasted_percentage | rawSafeDecoded}}</p>
-    {% endif %}
+    <p>Your Database has only been running for {{ uptime / 60 }} hours so hopefully you can rely on the database status variables that we use to calculate performance.<br>
 {% endif %}
--->
-<h2>Network</h2>
-<p>Database connection sample took {{ db_connection }} milliseconds</p>
-<h2>Temporary tables</h2>
-<p>{{ msg | rawSafeDecoded}}</p>
 
-<h2>Query Cache</h2>
-<p>{{ queryCacheCheck.msg | rawSafeDecoded}}</p>
-<p>{{ queryCacheCheck.msgFrag | rawSafeDecoded}}</p>
-<p>{{ queryCacheCheck.msgUnused | rawSafeDecoded}}</p>
-<p>{{ queryCacheCheck.msgSize | rawSafeDecoded}}</p>
+<h3>Memory usage</h3>
+<ul>
+    <li>max_memory: {{ memUsage.max_memory | rawSafeDecoded}}</li>
+    <li>per_thread_buffers: {{ memUsage.per_thread_buffers | rawSafeDecoded}}</li>
+    <li>global_buffers: {{ memUsage.global_buffers | rawSafeDecoded}}</li>
+    <li>total_memory: {{ memUsage.total_memory | rawSafeDecoded}}</li>
+    <li>effective_tmp_table_size: {{ memUsage.effective_tmp_table_size | rawSafeDecoded}}</li>
+</ul>
+<p><b>Note:</b> Max memory shoould not exceeds 90% of your servers physical memory</p>
+<h3>Network Connection</h3>
+<p>Database connection test took {{ db_connection }} ms<br>
+    We run "SELECT 1" to only test the latency of your db connection<br>
+    As a benchmark I get (0.10 - 0.30 ms) on my laptop where the network is local (very little latency)</p>
+<h3>Temporary tables and files</h3>
+{% if tmpTableCheck.tmp_disk_tables_ratio > 25 %}
+    <p class="alert alert-warning">Your tmp_disk_tables_ratio is {{ tmpTableCheck.tmp_disk_tables_ratio }} %. <br>
+       Many temporary tables are being written to disk instead of being kept in memory.<br>
+       Created tmp disk tables: {{ tmpTableCheck.tmp_disk_tables }} <br>
+       Increasing max_heap_table_size and tmp_table_size might help. <br>
+       However some temporary tables are always being written to disk, independent of the value of these variables. <br>
+       To eliminate these you will have to rewrite your queries to avoid those conditions (Within a temporary table: <br>
+       Presence of a BLOB or TEXT column or presence of a column bigger than 512 bytes) as mentioned in the <a href="https://dev.mysql.com/doc/refman/8.0/en/internal-temporary-tables.html">MySQL Documentation</a> </p>
+{% else %}
+    <p class="alert alert-success">Your tmp_disk_tables_ratio is {{ tmpTableCheck.tmp_disk_tables_ratio }} % seems fine.<br>
+{% endif %}
 
-<h2>Innodb Buffer pool</h2>
-<p>{{ getBufferpoolTest.message1 | rawSafeDecoded}}</p>
+{% set dbratio = tmpTableCheck.created_tmp_tables / uptime  %}
+{% if dbratio > 20 %}
+        <p class="alert alert-danger">The ratio (created_tmp_tables / uptime) is {{ dbratio | round(2, 'ceil') }} wich is alarming high. (higher than 20)<br>
+        You definitley need to look into if your settings are ok</p>
+{% else %}
+        <p class="alert alert-success">The ratio (created_tmp_tables / uptime) is {{ dbratio | round(2, 'ceil') }} wich fine (should be lower than 20).<br>
+{% endif %}
 
+{% set diskratio = tmpTableCheck.tmp_disk_tables / uptime   %}
+{% if diskratio  > 1 %}
+        <p class="alert alert-danger">The ratio (tmp_disk_tables / uptime) is {{ diskratio|round(2, 'ceil') }} wich is alarming high (higher than 1).<br>
+        You definitley need to look into lowering the disk io. </p>
+{% else %}
+        <p class="alert alert-success">The ratio (tmp_disk_tables / uptime) is {{ diskratio|round(2, 'ceil') }} wich fine (should be lower than 1).<br>
+{% endif %}
 
-<h2>PHP Checks</h2>
-<p>getPhpRealpathCacheUsage: {{ getPhpRealpathCacheUsage | rawSafeDecoded}} MB</p>
-<p>realpath_cache_size: {{ getPhpRealpathCacheSettings.realpath_cache_size | rawSafeDecoded}}</p>
-<p>realpath_cache_ttl: {{ getPhpRealpathCacheSettings.realpath_cache_ttl | rawSafeDecoded}}</p>
-<p>memory_limit: {{ phpInfo.memory_limit | rawSafeDecoded}}</p>
-<p>post_max_size: {{ phpInfo.post_max_size | rawSafeDecoded}}</p>
-<p>upload_max_filesize: {{ phpInfo.upload_max_filesize | rawSafeDecoded}}</p>
-<p>max_execution_time: {{ phpInfo.max_execution_time | rawSafeDecoded}}</p>
-<p>{{ phpInfo.xdebug_status | rawSafeDecoded}}</p>
+{% set o_file_rate = tmpTableCheck.open_files / uptime  * 60 * 60 %}
 
+{% if o_file_rate > 5  %}
+<p class="alert alert-warning">The rate of opening files (Open_files / Uptime) is high. {{o_file_rate |round(2, 'ceil')}} per hour (should be below 5)<br>
+   Consider increasing open_files_limit, and check the error log when restarting after changing open_files_limit.<br>
+   Note that your uptime of {{(uptime / 60) | round(0, 'ceil')}} minutes is quite low, this will affect the rate so you might want to wait some time before you make any changes.
+ </p>
+{% else %}
+<p class="alert alert-success">The rate of opening files (Open_files / Uptime) seems good: {{o_file_rate |round(2, 'ceil')}} per hour (should be below 5)<br>
+{% endif %}
 
-<h3>Opcache</h3>
-<p>Opcache is not part of the Database but since it might improve your Matomo  performance we include it here.</p>
-<table style="max-width: 600px;">
+{% set o_table_rate = tmpTableCheck.opened_tables / uptime  * 60 * 60 %}
+{% if o_table_rate > 10 and uptime > 10800 %}
+<p class="alert alert-warning">The rate of opening tables (Opened_tables / Uptime) is high. {{o_table_rate |round(2, 'ceil')}} per hour (should be below 10)<br>
+   Opening tables requires disk I/O which is costly. Increasing table_open_cache might avoid this.<br>
+   Note that your uptime of {{(uptime / 60) | round(0, 'ceil')}} minutes is quite low, this will affect the rate so you might want to wait some time before you make any changes.
+ </p>
+{% else %}
+<p class="alert alert-success">The rate of opening tables (Opened_tables / Uptime) seems good: {{o_table_rate |round(2, 'ceil')}} per hour (should be below 10)<br>
+{% endif %}
+<h3>Query Cache</h3>
+<h4>Query Cache Fragmentation</h4>
+{% if queryCacheCheck.qcache_percent_fragmentedHR > 20 %}
+    <p class="alert alert-warning">The Query Cache is {{queryCacheCheck.qcache_percent_fragmentedHR}} % fragmented<br>
+       Run "FLUSH QUERY CACHE" periodically to defragment the query cache memory
+       If you have a lot of small SQL queries in your application lowering query_cache_min_res_unit might reduce fragmentation."
+    </p>
+{% else %}
+    <p class="alert alert-success">The Query Cache fragmentation is ({{queryCacheCheck.qcache_percent_fragmentedHR}} %) which is fine<br>
+{% endif %}
+<h4>Query Cache Fill ratio</h4>
+{% if queryCacheCheck.qcache_fill_ratio < 25 %}
+<p class="alert alert-warning">Your query_cache_size of {{ queryCacheCheck.query_cache_size | rawSafeDecoded}} MB might be unnecessary high (resources might be used somewhere else)<br>
+    A to big query_cache_size might actually slow down a high traffic database.<br>
+    Try lowering the value untill your hitrate starts to drop<br>
+    Also try to lower the query_cache_min_res_unit to see if your database will cache more querys.<br>
+    The qcache_fill_ratio is only {{queryCacheCheck.qcache_fill_ratio}} %</p>
+{% else %}
+<p class="alert alert-success">Your Query Cache Fill ratio is {{queryCacheCheck.qcache_fill_ratio}} % wich us fine</p>
+{% endif %}
+<h4>Query Cache Status variables</h4>
+
+{% set uptime = queryCacheCheck.uptime | round(0, 'ceil') %}
+
+{% set q_hitrate = queryCacheCheck.qcache_hits / (queryCacheCheck.qcache_hits + queryCacheCheck.qcache_inserts )*100  %}
+{% if q_hitrate < 80 %}
+<p>Your Query Cache hit ratio is {{q_hitrate |round(2, 'ceil')}} %, this is to low.</p>
+{% else %}
+<p class="alert alert-success">Your Query Cache hit ratio is {{q_hitrate |round(2, 'ceil')}} % which is fine<br>
+{% endif %}
+<table>
     <thead><th>Name</th><th>Value</th></thead>
     <tbody>
-        {% for key, op in opCacheStatus.directives %}
+        <tr><td>uptime</td><td>{{ (queryCacheCheck.uptime / 60)|round(0, 'ceil')}} minutes</td></tr>
+        <tr><td>uptime_since_flush_status </td><td>{{ queryCacheCheck.uptime_since_flush_status }}</td></tr>
+        <tr><td>qcache_percent_fragmented </td><td>{{ queryCacheCheck.qcache_percent_fragmentedHR}} MB</td></tr>
+        <tr><td>qcache_free_memory </td><td>{{ queryCacheCheck.qcache_free_memory}} MB</td></tr>
+        <tr><td>qcache_fill_ratio </td><td>{{ queryCacheCheck.qcache_fill_ratio}} %</td></tr>
+        <tr><td>qcache_free_memory </td><td>{{ queryCacheCheck.qcache_free_memory}} MB</td></tr>
+        <tr><td>qcache_percent_fragmented </td><td>{{queryCacheCheck.qcache_percent_fragmentedHR}} MB</td></tr>
+        <tr><td>qcache_lowmem_prunes </td><td>{{ queryCacheCheck.qcache_lowmem_prunes}} (times queries have been removed from the query cache due to lack of memory)</td></tr>
+        <tr><td>qcache_hits </td><td>{{ queryCacheCheck.qcache_hits}}</td></tr>
+        <tr><td>qcache_inserts </td><td>{{ queryCacheCheck.qcache_inserts}}</td></tr>
+        <tr><td>qcache_not_cached </td><td>{{ queryCacheCheck.qcache_not_cached}}</td></tr>
+</table>
+<h4>Query Cache Settings variables</h4>
+<table>
+    <thead><th>Name</th><th>Value</th></thead>
+    <tbody>
+        <tr><td>query_cache_size </td><td>{{ queryCacheCheck.query_cache_size}} MB</td></tr>
+        <tr><td>query_cache_min_res_unit </td><td>{{ queryCacheCheck.query_cache_min_res_unit}} bytes</td></tr>
+        <tr><td>query_cache_limit </td><td>{{ queryCacheCheck.query_cache_limit}} MB</td></tr>
+</table>
+
+<h3>Innodb Buffer pool</h3>
+<p>{{ getBufferpoolTest.message1 | rawSafeDecoded}}</p>
+<h2>PHP Checks</h2>
+<p>{{ phpInfo.xdebug_status | rawSafeDecoded}}</p>
+
+<h3>PHP Realpath Cache</h3>
+<p>The realpath cache can be important for your system io, since if the cache is to low files needs to be read from disk wich affect the system io. PHP does not have a good way to show if this value is good or not, we can only see the current usage. This value will change all the time. You can laborate with this and perhaps see if your systems disk IO is affected (in your server monitoring system).</p>
+<ul>
+    <li>Realpath CacheUsage: {{ getPhpRealpathCacheUsage | rawSafeDecoded}} MB</li>
+    <li>realpath_cache_size: {{ getPhpRealpathCacheSettings.realpath_cache_size | rawSafeDecoded}}</li>
+    <li>realpath_cache_ttl: {{ getPhpRealpathCacheSettings.realpath_cache_ttl | rawSafeDecoded}}</li>
+</ul>
+<h3>PHP Memory settings</h3>
+<ul>
+    <li>memory_limit: {{ phpInfo.memory_limit | rawSafeDecoded}}</li>
+    <li>post_max_size: {{ phpInfo.post_max_size | rawSafeDecoded}}</li>
+    <li>upload_max_filesize: {{ phpInfo.upload_max_filesize | rawSafeDecoded}}</li>
+    <li>max_execution_time: {{ phpInfo.max_execution_time | rawSafeDecoded}}</li>
+</ul>
+<h3>PHP Opcache</h3>
+{% if opCacheEnabled != false %}
+
+{% if queryCacheCheck.opcach_status.cache_full %}
+<p class="alert alert-warning">OpCache is full</p>
+{% else %}
+<p class="alert alert-success">OpCache is not full</p>
+{% endif %}
+
+{% if queryCacheCheck.opcach_status.opcache_statistics.num_cached_keys > (queryCacheCheck.opcach_status.opcache_statistics.max_cached_keys *0.9) %}
+<p class="alert alert-warning">Your OpCache is close to not beeing able handle enough files<br>
+Solution: Increase opcache.max_accelerated_files setting.<br>
+</p>
+{% else %}
+<p class="alert alert-success">OpCache seems to handle the files in your application fine. <br>
+    There is {{queryCacheCheck.opcach_status.opcache_statistics.num_cached_keys}} keys in the cache.<br>
+    The maximum allowed keys is {{queryCacheCheck.opcach_status.opcache_statistics.max_cached_keys}}</p>
+{% endif %}
+
+<p>Memory assigned to OpCache {{opCacheStatus.directives['opcache.memory_consumption'] / 1024 / 1024}} MB <br>
+OpCache free memory {{(queryCacheCheck.opcach_status.memory_usage.free_memory/ 1024 / 1024 )|round(1, 'ceil') }}MB<br>
+OpCache used memory {{(queryCacheCheck.opcach_status.memory_usage.used_memory/ 1024 / 1024 )|round(1, 'ceil') }}MB</p>
+
+<ul>
+<li>Number of opcache restarts due to low memory {{queryCacheCheck.opcach_status.opcache_statistics.oom_restarts}}</li>
+<li>Number of opcache restarts due to low max_accelerated_files {{queryCacheCheck.opcach_status.opcache_statistics.hash_restarts}}</li>
+<li>Last restart ( {{queryCacheCheck.last_restart_time}} )</li>
+<li>OpCache hit rate {{queryCacheCheck.opcach_status.opcache_statistics.opcache_hit_rate|round(0, 'ceil')}} %</li>
+<li>OpCache num cached scripts {{queryCacheCheck.opcach_status.opcache_statistics.num_cached_scripts}}</li>
+<li>OpCache wasted_memory {{queryCacheCheck.opcach_status.memory_usage.wasted_memory}}</li>
+</ul>
+<br>
+<table>
+    <thead><th>Name</th><th>Value</th></thead>
+    <tbody>
+    {% for key, op in opCacheStatus.directives %}
         <tr><td>{{ key }}</td><td>{{op }}</td></tr>
     {% endfor %}
     </tbody>
 </table>
+{% else %}
+<p>PHP Opcache is not running, you should defintley look into this since it can speed up your PHP application significantly.<br>Learn more about the Opcache here:
+    <a target="_blank" href="https://www.php.net/manual/en/book.opcache.php">https://www.php.net/manual/en/book.opcache.php</a></p>
+
+{% endif %}
 <h2>Mysql Performance Schema Output</h2>
 
-<table style="max-width: 600px;">
+<table>
     <thead><th>Name</th><th>Status</th></thead>
     <tbody>
 {% for info in getBufferpoolTest.message2 %}
@@ -71,4 +230,5 @@
         {% endfor %}
     </tbody>
 </table>
+</div>
 {% endblock %}

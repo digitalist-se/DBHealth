@@ -221,14 +221,12 @@ class Controller extends \Piwik\Plugin\Controller
         $total_memory = $global_buffers + $per_thread_buffers;
 
 
-        $msg1 = "Max Memory Ever Allocated : " .  round($max_memory/ 1024 / 1024,2) . " MB<br>";
-        $msg1 .= "Configured Max Per-thread Buffers : " . round($per_thread_buffers/ 1024 / 1024,2) . " MB<br>";
-        $msg1 .= "Configured Max Global Buffers : " . round($global_buffers/ 1024 / 1024,2) . " MB<br>";
-        $msg1 .= "Configured Max Memory Limit : " . round($total_memory/ 1024 / 1024,2) . " MB<br>";
-        $msg1 .= "Plus " . round($effective_tmp_table_size/ 1024 / 1024,2) . " MB per temporary table created<br>";
-        $msg1 .= "Note: Max memory limit shoould not exceeds 90% of your physical memory";
-
-        $result = [ "msg1" => $msg1];
+        $result = [ "max_memory" => round($max_memory/ 1024 / 1024,2),
+                    "per_thread_buffers" => round($per_thread_buffers/ 1024 / 1024,2),
+                    "global_buffers" => round($global_buffers/ 1024 / 1024,2),
+                    "total_memory" => round($total_memory/ 1024 / 1024,2),
+                    "effective_tmp_table_size" => round($effective_tmp_table_size/ 1024 / 1024,2)
+                  ];
 
 
         return $result;
@@ -261,13 +259,18 @@ class Controller extends \Piwik\Plugin\Controller
         $qcache_used_memory = 0;
         $qcache_free_blocks = 0;
         $qcache_lowmem_prunes = 0;
-
+        $uptime_since_flush_status = 0;
+        $uptime = 0;
+        $qcache_hits = 0;
+        $qcache_inserts = 0;
+        $qcache_not_cached = 0;
         //Calculations
         $qcache_mem_fill_ratio = 0;
         $qcache_used_memory= 0 ;
         $qcache_mem_fill_ratioHR = 0;
         $qcache_percent_fragmented = 0;
         $qcache_percent_fragmentedHR = 0;
+
         //Variables
         foreach ($variables as $item) {
             if($item['Variable_name'] == 'query_cache_size') {
@@ -283,21 +286,35 @@ class Controller extends \Piwik\Plugin\Controller
         //Status
         foreach ($stat as $item) {
             if($item['Variable_name'] == 'Qcache_free_memory') {
-                $qcache_free_memory = $item['Value'];
+                $qcache_free_memory = (int) $item['Value'];
             }
             if($item['Variable_name'] == 'Qcache_used_memory') {
-                $qcache_used_memory = $item['Value'];
+                $qcache_used_memory = (int) $item['Value'];
             }
             if($item['Variable_name'] == 'Qcache_free_blocks') {
-                $qcache_free_blocks = $item['Value'];
+                $qcache_free_blocks = (int) $item['Value'];
             }
             if($item['Variable_name'] == 'Qcache_total_blocks') {
-                $qcache_total_blocks = $item['Value'];
+                $qcache_total_blocks = (int) $item['Value'];
             }
-
+            if($item['Variable_name'] == 'Qcache_hits') {
+                $qcache_hits = (int) $item['Value'];
+            }
+            if($item['Variable_name'] == 'Qcache_not_cached') {
+                $qcache_not_cached = (int) $item['Value'];
+            }
+            if($item['Variable_name'] == 'Qcache_inserts') {
+                $qcache_inserts = (int) $item['Value'];
+            }
+            if($item['Variable_name'] == 'Uptime_since_flush_status') {
+                $uptime_since_flush_status = (int) $item['Value'];
+            }
+            if($item['Variable_name'] == 'Uptime') {
+                $uptime = (int) $item['Value'];
+            }
         }
         if ($query_cache_size == 0) {
-            $msg = "Query cache is supported but not enabled <br>Perhaps you should set the query_cache_size <b>(" . $query_cache_size . ")</b>";
+            $msg = "Query cache is supported but not enabled Perhaps you should set the query_cache_size(" . $query_cache_size . ")";
             $msgFrag = "";
             $msgUnused = "";
             $msgSize = "";
@@ -312,41 +329,71 @@ class Controller extends \Piwik\Plugin\Controller
                 $qcache_percent_fragmentedHR = $qcache_percent_fragmented / 1;
 
             }
-            if ($qcache_percent_fragmentedHR > 20) {
-                $msgFrag = "Query Cache is " . round($qcache_percent_fragmentedHR,2) . " % fragmented<br>";
-                $msgFrag = $msgFrag . "Run <b>FLUSH QUERY CACHE</b> periodically to defragment the query cache memory<br>";
-                $msgFrag = $msgFrag . "If you have many small queries lower 'query_cache_min_res_unit' to reduce fragmentation.";
-            }
-            else {
-                $msgFrag = "Fragmentation seems fine, Query Cache is " . round($qcache_percent_fragmented,2) . " % fragmented";
 
-            }
+
             if ( $qcache_mem_fill_ratioHR <= 25) {
-                $msgUnused = "Your query_cache_size (".  round($query_cache_size/ 1024 / 1024,2) . " MB) might to be too high (but if your system was recently restarded you might want to wait and see what happends) <br>";
-                $msgUnused = $msgUnused . "The memory fill ratio is " . round($qcache_mem_fill_ratioHR,2) . " %<br>";
+                $msgUnused = "Your query_cache_size (".  round($query_cache_size/ 1024 / 1024,2) . " MB) might to be too high (but if your system was recently restarded you might want to wait and see what happends) ";
+                $msgUnused = $msgUnused . "The memory fill ratio is " . round($qcache_mem_fill_ratioHR,2) . " %";
                 $msgUnused = $msgUnused . "Perhaps you can use these resources elsewhere";
             }
+
             if ($qcache_lowmem_prunes >= 50 && $qcache_mem_fill_ratioHR >= 80) {
-                $msgSize = "However " . $qcache_lowmem_prunes . " queries have been removed from the query cache<br>";
-                $msgSize = $msgSize ."due to lack of memory. <br> Perhaps you should raise query_cache_size";
+                $msgSize = "However " . $qcache_lowmem_prunes . " queries have been removed from the query cache ";
+                $msgSize = $msgSize ."due to lack of memory.  Perhaps you should raise query_cache_size";
 
             }
             else {
                 $msgSize = "Number of querys that has been removed from cache due to lack of memory (Qcache_lowmem_prunes) = " . $qcache_lowmem_prunes;
             }
-            $msg = "Query_cache_size : " .  round($query_cache_size/ 1024 / 1024,2) . " MB<br>";
-            $msg .= "Qcache_free_memory : " .  round($qcache_free_memory/ 1024 / 1024,2) . " MB<br>";
 
 
         }
-        $result = [ "msg" => $msg,
-                   "msgFrag" => $msgFrag,
+        $opcach_status;
+        $last_restart_time;
+        if (!extension_loaded('Zend OPcache')) {
+            $opcach_status = null;
+        }
+        else {
+            $opcach_status = opcache_get_status(false);
+            if( !isset($status['opcache_statistics']['last_restart_time']))
+                 $last_restart_time = "never";
+            else
+                $last_restart_time = date('Y-m-d H:i:s', $opcach_status['opcache_statistics']['last_restart_time']);
+        }
+        $result = [ "query_cache_size" => round($query_cache_size/ 1024 / 1024,2),
+                   "qcache_free_memory" => round($qcache_free_memory/ 1024 / 1024,2),
+                   "qcache_fill_ratio" => round($qcache_mem_fill_ratioHR,2),
+                   "qcache_percent_fragmentedHR" => round($qcache_percent_fragmentedHR,2),
+                   "qcache_lowmem_prunes" => $qcache_lowmem_prunes,
+                   "query_cache_min_res_unit" => $query_cache_min_res_unit,
+                   "query_cache_limit" => round($query_cache_limit/ 1024 / 1024,2),
+                   "qcache_hits" => $qcache_hits,
+                   "qcache_inserts" => $qcache_inserts,
+                   "qcache_not_cached" => $qcache_not_cached,
+                   "qcache_total_blocks" => $qcache_total_blocks,
                    "msgUnused" => $msgUnused,
+                   "opcach_status" => $opcach_status,
+                   "last_restart_time" => $last_restart_time,
+                   "uptime_since_flush_status" => $this->convertToHoursMins($uptime_since_flush_status/60, '%02d hour(s) %02d minutes'),
+                   "uptime" => $uptime,
                    "msgSize"  => $msgSize];
-
 
         return $result;
 
+    }
+
+    /**
+     * Calculate Hours Mins from seconds
+     *
+     * @return object[hours, minutes]
+     */
+    public function convertToHoursMins($time, $format = '%02d:%02d') {
+        if ($time < 1) {
+            return;
+        }
+        $hours = floor($time / 60);
+        $minutes = ($time % 60);
+        return sprintf($format, $hours, $minutes);
     }
 
     /**
@@ -354,9 +401,8 @@ class Controller extends \Piwik\Plugin\Controller
      *
      * @return object
      */
-    public function diskCheck()
+    public function tmpTableCheck()
     {
-        $variables = $this->showVariables();
         $stat = $this->showStatus();
 
         //TMP Table tests
@@ -364,14 +410,17 @@ class Controller extends \Piwik\Plugin\Controller
         $created_tmp_tables = 0;
         $tmp_disk_tables_ratio = 0;
         $tmp_table_message = "";
+        $pen_files = 0;
+        $percent_innodb_buffer_pool_free = 0;
+        $opened_tables = 0;
 
         //Status
         foreach ($stat as $item) {
             if($item['Variable_name'] == 'Created_tmp_disk_tables') {
-                $tmp_disk_tables = $item['Value'];
+                $tmp_disk_tables = (int) $item['Value'];
             }
             if($item['Variable_name'] == 'Created_tmp_tables') {
-                $created_tmp_tables = $item['Value'];
+                $created_tmp_tables = (int) $item['Value'];
             }
             if($item['Variable_name'] == 'Percent_innodb_buffer_pool_free') {
                 $percent_innodb_buffer_pool_free = (int) $item['Value'];
@@ -385,6 +434,13 @@ class Controller extends \Piwik\Plugin\Controller
             if($item['Variable_name'] == 'Max_used_connections') {
                 $max_used_connections = (int) $item['Value'];
             }
+            if($item['Variable_name'] == 'Open_files') {
+                $pen_files = (int) $item['Value'];
+            }
+            if($item['Variable_name'] == 'Opened_tables') {
+                $opened_tables = (int) $item['Value'];
+            }
+
         }
 
 
@@ -395,18 +451,15 @@ class Controller extends \Piwik\Plugin\Controller
             $tmp_disk_tables_ratio = (($tmp_disk_tables * 100 / ( $created_tmp_tables + $tmp_disk_tables)));
 
 
-        //Report
-        if($tmp_disk_tables_ratio > 25)
-            $tmp_table_message = "Perhaps you should increase your tmp_table_size and/or max_heap_table_size to reduce the number of disk-based temporary tables <br>
-                <b>Note:</b> BLOB and TEXT</b> columns are not allow in memory tables. If you are using these columns raising these values might not impact your  ratio of on disk temp tables.";
-        else
-            $tmp_table_message = "Created disk tmp tables ratio seems fine";
-
-        $tmp_table_message .= "<br>Created tmp_disk_tables: " . $tmp_disk_tables . "<br>";
-        $tmp_table_message .= "Created created_tmp_tables: " . $created_tmp_tables;
 
 
-        $result = ["msg" => $tmp_table_message, "tmp_disk_tables" => $tmp_disk_tables, "created_tmp_tables" => $created_tmp_tables];
+        $result = ["tmp_disk_tables" => $tmp_disk_tables,
+                   "created_tmp_tables" => $created_tmp_tables,
+                   "tmp_disk_tables_ratio" => round($tmp_disk_tables_ratio,2),
+                   "percent_innodb_buffer_pool_free" => $percent_innodb_buffer_pool_free,
+                   "open_files" => $pen_files,
+                   "opened_tables" => $opened_tables
+                  ];
 
 
         return $result;
@@ -448,16 +501,15 @@ class Controller extends \Piwik\Plugin\Controller
         $innodb_safe_binlog = 0;
         $innodb_thread_concurrency = 0;
 
-
         //Calculations
         $percent_innodb_buffer_pool_free = 0;
 
         foreach ($variables as $item) {
             if($item['Variable_name'] == 'innodb_buffer_pool_size') {
-                $innodb_buffer_pool_size = $item['Value'];
+                $innodb_buffer_pool_size = (int) $item['Value'];
             }
             if($item['Variable_name'] == 'innodb_additional_mem_pool_size') {
-                $innodb_additional_mem_pool_size = $item['Value'];
+                $innodb_additional_mem_pool_size = (int) $item['Value'];
             }
             if($item['Variable_name'] == 'innodb_fast_shutdown') {
                 $innodb_fast_shutdown = $item['Value'];
@@ -469,10 +521,10 @@ class Controller extends \Piwik\Plugin\Controller
                 $innodb_locks_unsafe_for_binlog = $item['Value'];
             }
             if($item['Variable_name'] == 'innodb_log_buffer_size') {
-                $innodb_log_buffer_size = $item['Value'];
+                $innodb_log_buffer_size = (int) $item['Value'];
             }
             if($item['Variable_name'] == 'innodb_log_file_size') {
-                $innodb_log_file_size = $item['Value'];
+                $innodb_log_file_size = (int) $item['Value'];
             }
             if($item['Variable_name'] == 'innodb_log_files_in_group') {
                 $innodb_log_files_in_group = $item['Value'];
@@ -481,7 +533,7 @@ class Controller extends \Piwik\Plugin\Controller
                 $innodb_safe_binlog = $item['Value'];
             }
             if($item['Variable_name'] == 'innodb_thread_concurrency') {
-                $innodb_thread_concurrency = $item['Value'];
+                $innodb_thread_concurrency = (int) $item['Value'];
             }
         }
         foreach ($stat as $item) {
@@ -515,6 +567,7 @@ class Controller extends \Piwik\Plugin\Controller
             if($item['Variable_name'] == 'Innodb_row_lock_waits') {
                 $innodb_row_lock_waits = (int) $item['Value'];
             }
+
         }
 
         $percent_innodb_buffer_pool_free = $innodb_buffer_pool_pages_free * 100 / $innodb_buffer_pool_pages_total;
@@ -523,12 +576,12 @@ class Controller extends \Piwik\Plugin\Controller
         $innodb_indexes = (int) $this->showInnodbIndexes()[0]['var'];
         $innodb_data = (int) $this->showInnodbData()[0]['var'];
 
-        $message1 = "Current InnoDB index space = " . round($innodb_indexes/ 1024 / 1024,2) ." MB<br>";
-        $message1 .=  "Current InnoDB data space = " . round($innodb_data/ 1024 / 1024,2) . " MB<br>";
-        $message1 .= "Current InnoDB buffer pool free = " . round($percent_innodb_buffer_pool_free,2) ." %<br>";
-        $message1 .= "Current innodb_buffer_pool_size = " . round($innodb_buffer_pool_size/ 1024 / 1024,2) ." MB<br>";
-        $message1 .= "Depending on how much space your innodb indexes take up it may be safe<br>";
-        $message1 .= "to increase innodb_buffer_pool_size value to up to 2 / 3 of total system memory<br>";
+        $message1 = "Current InnoDB index space = " . round($innodb_indexes/ 1024 / 1024,2) ." MB";
+        $message1 .=  "Current InnoDB data space = " . round($innodb_data/ 1024 / 1024,2) . " MB";
+        $message1 .= "Current InnoDB buffer pool free = " . round($percent_innodb_buffer_pool_free,2) ." %";
+        $message1 .= "Current innodb_buffer_pool_size = " . round($innodb_buffer_pool_size/ 1024 / 1024,2) ." MB";
+        $message1 .= "Depending on how much space your innodb indexes take up it may be safe";
+        $message1 .= "to increase innodb_buffer_pool_size value to up to 2 / 3 of total system memory";
         $message2 = $this->showPerformanceSchemaStatus();
         $result = ["message1" => $message1, "message2" => $message2];
         return $result;
@@ -549,9 +602,7 @@ class Controller extends \Piwik\Plugin\Controller
             'perfreport',
             [
              'db_connection' =>  $this->dbStatus(),
-             'msg' => $this->diskCheck()["msg"],
-             'tmp_disk_tables' => $this->diskCheck()["tmp_disk_tables"],
-             'created_tmp_tables' => $this->diskCheck()["created_tmp_tables"],
+             'tmpTableCheck' => $this->tmpTableCheck(),
              'queryCacheCheck' => $this->queryCacheCheck(),
              'getBufferpoolTest' => $this->getBufferpoolTest(),
              'memUsage' => $this->memUsage(),
@@ -564,25 +615,42 @@ class Controller extends \Piwik\Plugin\Controller
         );
 
     }
+
+
     public function getPhpRealpathCacheUsage() {
         return round(realpath_cache_size()/ 1024 / 1024,2) ;
     }
+
+    /**
+     *  PHP getPhpRealpathCacheSettings
+     *
+     * @return object
+     */
     public function getPhpRealpathCacheSettings() {
         $result = [];
         $result = ["realpath_cache_size" => ini_get('realpath_cache_size') , "realpath_cache_ttl" => ini_get('realpath_cache_ttl')];
         return $result;
     }
-
+    /**
+     *  PHP getXdebugStatus
+     *
+     * @return string
+     */
     public function getXdebugStatus() {
         if (!extension_loaded('xdebug')) {
-            return "<span class=''>Xdebug is not enabled, this is what you want in a production environment (since Xdebug will slow you application down).</span>";
+            return "Xdebug is not enabled, this is what you want in a production environment (since Xdebug will slow you application down).";
         }
         else
-            return "<span class=''>Xdebug is enabled, this is not good in a production environment (since Xdebug will slow you application down).</span>";
+            return "Xdebug is enabled, this is not good in a production environment (since Xdebug will slow you application down).";
     }
+
+    /**
+     *  PHP Mem info
+     *
+     * @return object
+     */
     public function getPhpMemInfo() {
         $result = [];
-
 
         $result = ["memory_limit" => ini_get('memory_limit'),
                    "post_max_size" => ini_get('post_max_size'),
@@ -601,9 +669,13 @@ class Controller extends \Piwik\Plugin\Controller
      * @return int
      */
     public function dbStatus() {
+
         $time_start = hrtime(true);
-        // Get DB connection
-        Db::get();
+        // We use SELECT 1; as the test query as we only want to check for latency between the host and the mysql engine, we are not testing the database schema performance here.
+        $db = new Db();
+        $query = "SELECT 1";
+        $result = $db::fetchAll($query);
+
         $time_end = hrtime(true);
         $time = $time_end  - $time_start;
         return  $time/1e+6;
@@ -673,4 +745,5 @@ class Controller extends \Piwik\Plugin\Controller
             return $e->getMessage();
         }
     }
+
 }

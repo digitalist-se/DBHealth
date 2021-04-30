@@ -86,9 +86,7 @@ class API extends \Piwik\Plugin\API
                           'Max_data_length' => $item['Max_data_length'],
                           'Index_length' => $item['Index_length'],
                           'Data_free' => $item['Data_free'],
-                          'Checksum' => $item['Checksum'],
-                          'Max_index_length' => $item['Max_index_length'],
-                          'Temporary' => $item['Temporary']
+                          'Checksum' => $item['Checksum']
                          )
                 ));
 

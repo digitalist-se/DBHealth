@@ -1,6 +1,6 @@
 {
     "name": "DBHealth",
-    "description": "This plugin will help you analyze you database health",
+    "description": "This plugin will help you analyze your system and database health and also provide suggested system setting improvements",
     "version": "0.0.5",
     "theme": false,
     "require": {

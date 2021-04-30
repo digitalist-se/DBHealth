@@ -656,6 +656,7 @@ class Controller extends \Piwik\Plugin\Controller
                    "post_max_size" => ini_get('post_max_size'),
                    "upload_max_filesize" => ini_get('upload_max_filesize'),
                    "max_execution_time" => ini_get('max_execution_time'),
+                   "xdebug_mode" => ini_get('xdebug.mode'),
                    "xdebug_status" => $this->getXdebugStatus()
                   ];
         return $result;

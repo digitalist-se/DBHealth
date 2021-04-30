@@ -159,7 +159,8 @@ However if your uptime is low this might be the reason, so make sure to wait unt
 <h3>Innodb Buffer pool</h3>
 <p>{{ getBufferpoolTest.message1 | rawSafeDecoded}}</p>
 <h2>PHP Checks</h2>
-{% if phpInfo.xdebug_status %}
+{% set xdebug_mode = phpInfo.xdebug_mode %}
+{% if phpInfo.xdebug_status or xdebug_mode == null or xdebug_mode == off  %}
 <p class="alert alert-success">Xdebug is not enabled, this is good in a production environment (since Xdebug will slow you application down).</p>
 {% else %}
 <p class="alert alert-warning">"Xdebug is enabled, this will slow you application down and something you should be aware of. <br>

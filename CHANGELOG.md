@@ -2,6 +2,9 @@
 
 Here goes the changelog text.
 
+v0.0.7
+Remove tests that require access ti info schema for now (need to build verifications that we have access first otherwise we will get errors)
+
 v0.0.6
 Remove MYSQL table status for now, needs more testing
 Addin Innodb report improvements

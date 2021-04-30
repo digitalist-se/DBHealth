@@ -157,7 +157,19 @@ However if your uptime is low this might be the reason, so make sure to wait unt
 </table>
 
 <h3>Innodb Buffer pool</h3>
-<p>{{ getBufferpoolTest.message1 | rawSafeDecoded}}</p>
+<ul>
+<li>Current InnoDB index space: {{getBufferpoolTest.innodb_indexes}} MB </li>
+<li>Current InnoDB data space: {{getBufferpoolTest.innodb_data}} MB</li>
+<li>Current InnoDB bufferpool free: {{getBufferpoolTest.percent_innodb_buffer_pool_free}} MB</li>
+<li>Current InnoDB bufferpool zize: {{getBufferpoolTest.innodb_buffer_pool_size}} MB</li>
+</ul>
+{% if getBufferpoolTest.innodb_flush_log_at_trx_commit != 2  %}
+<p class="alert alert-warning">You should change your database setting innodb_flush_log_at_trx_commit to 2 for optimal performance<br>
+Your current value is {{getBufferpoolTest.innodb_flush_log_at_trx_commit}}<br>
+<a href="https://matomo.org/docs/optimize-how-to/">Read more here.</a></p>
+{% endif %}
+
+
 <h2>PHP Checks</h2>
 {% set xdebug_mode = phpInfo.xdebug_mode %}
 {% if phpInfo.xdebug_status or xdebug_mode == null or xdebug_mode == off  %}
@@ -203,8 +215,8 @@ Solution: Increase opcache.max_accelerated_files setting.<br>
 {% endif %}
 
 <p>Memory assigned to OpCache {{opCacheStatus.directives['opcache.memory_consumption'] / 1024 / 1024}} MB <br>
-OpCache free memory {{(queryCacheCheck.opcach_status.memory_usage.free_memory/ 1024 / 1024 )|round(1, 'ceil') }}MB<br>
-OpCache used memory {{(queryCacheCheck.opcach_status.memory_usage.used_memory/ 1024 / 1024 )|round(1, 'ceil') }}MB</p>
+OpCache free memory {{(queryCacheCheck.opcach_status.memory_usage.free_memory/ 1024 / 1024 )|round(1, 'ceil') }} MB<br>
+OpCache used memory {{(queryCacheCheck.opcach_status.memory_usage.used_memory/ 1024 / 1024 )|round(1, 'ceil') }} MB</p>
 
 <ul>
 <li>Number of opcache restarts due to low memory {{queryCacheCheck.opcach_status.opcache_statistics.oom_restarts}}</li>
@@ -228,16 +240,6 @@ OpCache used memory {{(queryCacheCheck.opcach_status.memory_usage.used_memory/ 1
     <a target="_blank" href="https://www.php.net/manual/en/book.opcache.php">https://www.php.net/manual/en/book.opcache.php</a></p>
 
 {% endif %}
-<h2>Mysql Performance Schema Output</h2>
 
-<table>
-    <thead><th>Name</th><th>Status</th></thead>
-    <tbody>
-{% for info in getBufferpoolTest.message2 %}
-        <tr><td>{{ info.Name }}</td><td>{{ info.Status }}</td></tr>
-
-        {% endfor %}
-    </tbody>
-</table>
 </div>
 {% endblock %}

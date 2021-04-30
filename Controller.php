@@ -409,7 +409,6 @@ class Controller extends \Piwik\Plugin\Controller
         $tmp_disk_tables = 0;
         $created_tmp_tables = 0;
         $tmp_disk_tables_ratio = 0;
-        $tmp_table_message = "";
         $pen_files = 0;
         $percent_innodb_buffer_pool_free = 0;
         $opened_tables = 0;
@@ -474,8 +473,6 @@ class Controller extends \Piwik\Plugin\Controller
 
         $variables = $this->showVariables();
         $stat = $this->showStatus();
-        $message1 = "";
-        $message2 = "";
 
         //Status
         $innodb_buffer_pool_pages_data = 0;
@@ -576,14 +573,12 @@ class Controller extends \Piwik\Plugin\Controller
         $innodb_indexes = (int) $this->showInnodbIndexes()[0]['var'];
         $innodb_data = (int) $this->showInnodbData()[0]['var'];
 
-        $message1 = "Current InnoDB index space = " . round($innodb_indexes/ 1024 / 1024,2) ." MB";
-        $message1 .=  "Current InnoDB data space = " . round($innodb_data/ 1024 / 1024,2) . " MB";
-        $message1 .= "Current InnoDB buffer pool free = " . round($percent_innodb_buffer_pool_free,2) ." %";
-        $message1 .= "Current innodb_buffer_pool_size = " . round($innodb_buffer_pool_size/ 1024 / 1024,2) ." MB";
-        $message1 .= "Depending on how much space your innodb indexes take up it may be safe";
-        $message1 .= "to increase innodb_buffer_pool_size value to up to 2 / 3 of total system memory";
-        $message2 = $this->showPerformanceSchemaStatus();
-        $result = ["message1" => $message1, "message2" => $message2];
+        $result = [ "innodb_indexes" => round($innodb_indexes/ 1024 / 1024,2),
+                   "innodb_data" => round($innodb_data/ 1024 / 1024,2),
+                   "innodb_buffer_pool_size" => round($innodb_buffer_pool_size/ 1024 / 1024,2),
+                   "percent_innodb_buffer_pool_free" => round($percent_innodb_buffer_pool_free,2),
+                   "innodb_flush_log_at_trx_commit" => $innodb_flush_log_at_trx_commit
+                  ];
         return $result;
 
     }

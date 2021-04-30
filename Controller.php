@@ -569,13 +569,11 @@ class Controller extends \Piwik\Plugin\Controller
 
         $percent_innodb_buffer_pool_free = $innodb_buffer_pool_pages_free * 100 / $innodb_buffer_pool_pages_total;
 
+        // TODO Need to verify that we have access ti infi schema before we run these - Disable for now
+        //$innodb_indexes = (int) $this->showInnodbIndexes()[0]['var'];
+        //$innodb_data = (int) $this->showInnodbData()[0]['var'];
 
-        $innodb_indexes = (int) $this->showInnodbIndexes()[0]['var'];
-        $innodb_data = (int) $this->showInnodbData()[0]['var'];
-
-        $result = [ "innodb_indexes" => round($innodb_indexes/ 1024 / 1024,2),
-                   "innodb_data" => round($innodb_data/ 1024 / 1024,2),
-                   "innodb_buffer_pool_size" => round($innodb_buffer_pool_size/ 1024 / 1024,2),
+        $result = ["innodb_buffer_pool_size" => round($innodb_buffer_pool_size/ 1024 / 1024,2),
                    "percent_innodb_buffer_pool_free" => round($percent_innodb_buffer_pool_free,2),
                    "innodb_flush_log_at_trx_commit" => $innodb_flush_log_at_trx_commit
                   ];

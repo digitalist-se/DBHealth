@@ -222,7 +222,7 @@ OpCache used memory {{(queryCacheCheck.opcach_status.memory_usage.used_memory/ 1
 <li>Last restart ( {{queryCacheCheck.last_restart_time}} )</li>
 <li>OpCache hit rate {{queryCacheCheck.opcach_status.opcache_statistics.opcache_hit_rate|round(0, 'ceil')}} %</li>
 <li>OpCache num cached scripts {{queryCacheCheck.opcach_status.opcache_statistics.num_cached_scripts}}</li>
-<li>OpCache wasted_memory {{queryCacheCheck.opcach_status.memory_usage.wasted_memory}}</li>
+<li>OpCache wasted_memory {{queryCacheCheck.opcach_status.memory_usage.wasted_memory/ 1024 / 1024}} MB</li>
 </ul>
 <br>
 <table>

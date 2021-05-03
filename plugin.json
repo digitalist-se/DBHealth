@@ -1,7 +1,7 @@
 {
     "name": "DBHealth",
     "description": "This plugin will help you analyze your system and database health and also provide suggested system setting improvements",
-    "version": "0.0.7",
+    "version": "0.0.8",
     "theme": false,
     "require": {
         "piwik": ">=3.14.1-stable,<5.0.0-b1"

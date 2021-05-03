@@ -2,6 +2,10 @@
 
 Here goes the changelog text.
 
+
+v0.0.8
+Fix bug in security check
+
 v0.0.7
 Remove tests that require access ti info schema for now (need to build verifications that we have access first otherwise we will get errors)
 

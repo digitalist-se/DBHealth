@@ -2,6 +2,11 @@
 
 Here goes the changelog text.
 
+v0.0.10
+Securing functions by not making them public and also adding new report for problematic segments
+
+v0.0.9
+Minor fixes of spelling errors and some cleaning up in reports
 
 v0.0.8
 Fix bug in security check

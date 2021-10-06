@@ -73,6 +73,7 @@
         <p class="alert alert-success">The ratio (created_tmp_tables / uptime) is {{ dbratio | round(2, 'ceil') }} wich fine (should be lower than 20).<br>
 {% endif %}
 
+
 {% set diskratio = tmpTableCheck.tmp_disk_tables / uptime   %}
 {% if diskratio  > 1 %}
         <p class="alert alert-danger">The ratio (tmp_disk_tables / uptime) is {{ diskratio|round(2, 'ceil') }} wich is alarming high (higher than 1).<br>
@@ -205,9 +206,11 @@ Only enable Xdebug when you need it to troubleshoot your code.</p>
 {% if queryCacheCheck.opcach_status.opcache_statistics.num_cached_keys > (queryCacheCheck.opcach_status.opcache_statistics.max_cached_keys *0.9) %}
 <p class="alert alert-warning">Your OpCache is close to not beeing able handle enough files<br>
 Solution: Increase opcache.max_accelerated_files setting.<br>
+There is {{queryCacheCheck.opcach_status.opcache_statistics.num_cached_keys}} keys in the cache.<br>
+The maximum allowed keys is {{queryCacheCheck.opcach_status.opcache_statistics.max_cached_keys}}<br>
 </p>
 {% else %}
-<p class="alert alert-success">OpCache seems to handle the files in your application fine. <br>
+<p class="alert alert-success">OpCache seems to handle the cache entries in your application fine. <br>
     There is {{queryCacheCheck.opcach_status.opcache_statistics.num_cached_keys}} keys in the cache.<br>
     The maximum allowed keys is {{queryCacheCheck.opcach_status.opcache_statistics.max_cached_keys}}</p>
 {% endif %}
@@ -221,18 +224,10 @@ OpCache used memory {{(queryCacheCheck.opcach_status.memory_usage.used_memory/ 1
 <li>Number of opcache restarts due to low max_accelerated_files {{queryCacheCheck.opcach_status.opcache_statistics.hash_restarts}}</li>
 <li>Last restart ( {{queryCacheCheck.last_restart_time}} )</li>
 <li>OpCache hit rate {{queryCacheCheck.opcach_status.opcache_statistics.opcache_hit_rate|round(0, 'ceil')}} %</li>
-<li>OpCache num cached scripts {{queryCacheCheck.opcach_status.opcache_statistics.num_cached_scripts}}</li>
 <li>OpCache wasted_memory {{queryCacheCheck.opcach_status.memory_usage.wasted_memory/ 1024 / 1024}} MB</li>
 </ul>
 <br>
-<table>
-    <thead><th>Name</th><th>Value</th></thead>
-    <tbody>
-    {% for key, op in opCacheStatus.directives %}
-        <tr><td>{{ key }}</td><td>{{op }}</td></tr>
-    {% endfor %}
-    </tbody>
-</table>
+
 {% else %}
 <p>PHP Opcache is not running, you should defintley look into this since it can speed up your PHP application significantly.<br>Learn more about the Opcache here:
     <a target="_blank" href="https://www.php.net/manual/en/book.opcache.php">https://www.php.net/manual/en/book.opcache.php</a></p>

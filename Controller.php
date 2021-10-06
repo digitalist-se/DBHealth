@@ -30,11 +30,10 @@ class Controller extends \Piwik\Plugin\Controller
 {
 
 
-    public function index()
+    function index()
     {
         return null;
     }
-
 
 
 
@@ -43,7 +42,7 @@ class Controller extends \Piwik\Plugin\Controller
      *
      * @return array
      */
-    public function showPerformanceSchemaStatus()
+    function showPerformanceSchemaStatus()
     {
         $db = new Db();
         $query = "SHOW ENGINE PERFORMANCE_SCHEMA STATUS";
@@ -55,7 +54,7 @@ class Controller extends \Piwik\Plugin\Controller
      *
      * @return array
      */
-    public function showInnodbIndexes()
+    function showInnodbIndexes()
     {
         $db = new Db();
         $query = "SELECT SUM(INDEX_LENGTH) var FROM information_schema.tables WHERE ENGINE='InnoDB'";
@@ -67,7 +66,7 @@ class Controller extends \Piwik\Plugin\Controller
      *
      * @return array
      */
-    public function showInnodbData()
+    function showInnodbData()
     {
         $db = new Db();
         $query = "SELECT SUM(DATA_LENGTH) var FROM information_schema.tables WHERE ENGINE='InnoDB'";
@@ -79,14 +78,14 @@ class Controller extends \Piwik\Plugin\Controller
      *
      * @return array
      */
-    public function showVariables()
+    function showVariables()
     {
         $db = new Db();
         $query = "SHOW VARIABLES";
         return $db::fetchAll($query);
     }
 
-    public function opCacheStatus()
+    function opCacheStatus()
     {
         if (!extension_loaded('Zend OPcache')) {
             return null;
@@ -94,7 +93,7 @@ class Controller extends \Piwik\Plugin\Controller
         else
             return opcache_get_configuration();
     }
-    public function opCacheEnabled()
+    function opCacheEnabled()
     {
         if (!extension_loaded('Zend OPcache')) {
             return false;
@@ -107,7 +106,7 @@ class Controller extends \Piwik\Plugin\Controller
      *
      * @return array
      */
-    public function showStatus()
+    function showStatus()
     {
         $db = new Db();
         $query = "SHOW STATUS";
@@ -119,7 +118,7 @@ class Controller extends \Piwik\Plugin\Controller
      *
      * @return object
      */
-    public function memUsage()
+    function memUsage()
     {
         $variables = $this->showVariables();
         $stat = $this->showStatus();
@@ -239,7 +238,7 @@ class Controller extends \Piwik\Plugin\Controller
      *
      * @return object
      */
-    public function queryCacheCheck()
+    function queryCacheCheck()
     {
         $variables = $this->showVariables();
         $stat = $this->showStatus();
@@ -387,7 +386,7 @@ class Controller extends \Piwik\Plugin\Controller
      *
      * @return object[hours, minutes]
      */
-    public function convertToHoursMins($time, $format = '%02d:%02d') {
+     function convertToHoursMins($time, $format = '%02d:%02d') {
         if ($time < 1) {
             return;
         }
@@ -401,7 +400,7 @@ class Controller extends \Piwik\Plugin\Controller
      *
      * @return object
      */
-    public function tmpTableCheck()
+    function tmpTableCheck()
     {
         $stat = $this->showStatus();
 
@@ -469,7 +468,7 @@ class Controller extends \Piwik\Plugin\Controller
      *
      * @return object
      */
-    public function getBufferpoolTest() {
+     function getBufferpoolTest() {
 
         $variables = $this->showVariables();
         $stat = $this->showStatus();
@@ -586,7 +585,7 @@ class Controller extends \Piwik\Plugin\Controller
      *
      * @return object
      */
-    public function getPerfChecks() {
+     function getPerfChecks() {
         $api = new DBHealthAPI();
 
         //Only for local dev
@@ -610,7 +609,7 @@ class Controller extends \Piwik\Plugin\Controller
     }
 
 
-    public function getPhpRealpathCacheUsage() {
+     function getPhpRealpathCacheUsage() {
         return round(realpath_cache_size()/ 1024 / 1024,2) ;
     }
 
@@ -619,7 +618,7 @@ class Controller extends \Piwik\Plugin\Controller
      *
      * @return object
      */
-    public function getPhpRealpathCacheSettings() {
+     function getPhpRealpathCacheSettings() {
         $result = [];
         $result = ["realpath_cache_size" => ini_get('realpath_cache_size') , "realpath_cache_ttl" => ini_get('realpath_cache_ttl')];
         return $result;
@@ -629,7 +628,7 @@ class Controller extends \Piwik\Plugin\Controller
      *
      * @return string
      */
-    public function getXdebugStatus() {
+     function getXdebugStatus() {
         if (!extension_loaded('xdebug')) {
             return false;
         }
@@ -642,7 +641,7 @@ class Controller extends \Piwik\Plugin\Controller
      *
      * @return object
      */
-    public function getPhpMemInfo() {
+     function getPhpMemInfo() {
         $result = [];
 
         $result = ["memory_limit" => ini_get('memory_limit'),
@@ -662,7 +661,7 @@ class Controller extends \Piwik\Plugin\Controller
      *
      * @return int
      */
-    public function dbStatus() {
+     function dbStatus() {
 
         $time_start = hrtime(true);
         // We use SELECT 1; as the test query as we only want to check for latency between the host and the mysql engine, we are not testing the database schema performance here.
@@ -676,6 +675,28 @@ class Controller extends \Piwik\Plugin\Controller
     }
 
       /**
+     * Visualize Table Status Variables
+     *
+     * @return object
+     */
+    public function showProblematicSegments() {
+        //Log::debug("A user accessed getMysqlVariableData()");
+        try {
+            $api = new DBHealthAPI();
+            return $this->renderTemplate(
+                'segments',
+                [
+                    'dataTable' =>  $api->getProblematicSegments()
+
+                ]
+            );
+
+        } catch (\Exception $e) {
+            return $e->getMessage();
+        }
+    }
+
+    /**
      * Visualize Table Status Variables
      *
      * @return object

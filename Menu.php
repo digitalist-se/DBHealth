@@ -28,6 +28,7 @@ class Menu extends \Piwik\Plugin\Menu
         $menu->addItem('Performance tuning', "DB Status variables", $this->urlForAction('getMysqlStatus'));
         $menu->addItem('Performance tuning', "DB Setting variables", $this->urlForAction('getMysqlVariableData'));
         $menu->addItem('Performance tuning', "Show database table status", $this->urlForAction('getMysqlTableStatus'));
+        $menu->addItem('Performance tuning', "Show problematic segments", $this->urlForAction('showProblematicSegments'));
     }
 
     }

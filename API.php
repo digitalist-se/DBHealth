@@ -26,13 +26,53 @@ use Piwik\DataTable\Row;
 class API extends \Piwik\Plugin\API
 {
 
+
+
+
+    /**
+     * Return Database Table Status data
+     *
+     * @return DataTable
+     */
+    function getProblematicSegments() {
+        if (!Piwik::hasUserSuperUserAccess()) {
+            throw new \Exception("No access to DBHealth");
+            Piwik::checkUserHasAdminAccess($initialIdSite);
+        }
+        try {
+            $dataTable = new DataTable();
+
+            $query = "SELECT name,idsegment,definition,enable_only_idsite,ts_created,ts_last_edit FROM `matomo_segment` where definition like '%@%'";
+            $result = $this->getDb()->fetchAssoc($query);
+
+            foreach ($result as $item) {
+                $dataTable->addRowsFromSimpleArray(array(
+                    array('Name' => $item['name'],
+                          'Idsegment' => $item['idsegment'],
+                          'Definition' => $item['definition'],
+                          'Used on siteId (0=all)' => $item['enable_only_idsite'],
+                          'Creation date' => $item['ts_created'],
+                          'Last updated' => $item['ts_last_edit']
+                         )
+                ));
+
+            }
+            return $dataTable;
+
+        } catch (\Exception $e) {
+            return $e->getMessage();
+        }
+
+    }
+
+
+
     /**
      * Return Database Status variables
      *
      * @return DataTable
      */
-
-    public function getMysqlStatusData()
+    function getMysqlStatusData()
     {
         if (!Piwik::hasUserSuperUserAccess()) {
             throw new \Exception("No access to DBHealth");
@@ -64,7 +104,7 @@ class API extends \Piwik\Plugin\API
      *
      * @return DataTable
      */
-    public function getMysqlTableStatus() {
+    function getMysqlTableStatus() {
         if (!Piwik::hasUserSuperUserAccess()) {
             throw new \Exception("No access to DBHealth");
             Piwik::checkUserHasAdminAccess($initialIdSite);
@@ -103,7 +143,7 @@ class API extends \Piwik\Plugin\API
      *
      * @return DataTable
      */
-    public function getMysqlVariableData()
+    function getMysqlVariableData()
     {
         if (!Piwik::hasUserSuperUserAccess()) {
             throw new \Exception("No access to DBHealth");

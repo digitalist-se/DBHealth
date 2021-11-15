@@ -1,8 +1,11 @@
 {% extends 'admin.twig' %}
 {% block content %}
-
-<div class="row">
-        {{ dataTable | raw }}
+<div class="card">
+    <div class="card-content">
+        <div class="row">
+            {{ dataTable | raw }}
+        </div>
+    </div>
 </div>
 
 {% endblock %}

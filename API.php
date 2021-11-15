@@ -42,7 +42,7 @@ class API extends \Piwik\Plugin\API
         try {
             $dataTable = new DataTable();
 
-            $query = "SELECT name,idsegment,definition,enable_only_idsite,ts_created,ts_last_edit FROM `matomo_segment` where definition like '%@%'";
+            $query = "SELECT name,idsegment,definition,enable_only_idsite,ts_created,ts_last_edit FROM `matomo_segment` where definition like '%@%' and deleted not like '1' ";
             $result = $this->getDb()->fetchAssoc($query);
 
             foreach ($result as $item) {

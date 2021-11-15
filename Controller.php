@@ -81,7 +81,7 @@ class Controller extends \Piwik\Plugin\Controller
     function showVariables()
     {
         $db = new Db();
-        $query = "SHOW VARIABLES";
+        $query = "SHOW GLOBAL VARIABLES";
         return $db::fetchAll($query);
     }
 
@@ -109,7 +109,7 @@ class Controller extends \Piwik\Plugin\Controller
     function showStatus()
     {
         $db = new Db();
-        $query = "SHOW STATUS";
+        $query = "SHOW GLOBAL STATUS";
         return $db::fetchAll($query);
     }
 
@@ -142,6 +142,8 @@ class Controller extends \Piwik\Plugin\Controller
         $innodb_log_buffer_size= 0;
         $key_buffer_size = 0;
         $query_cache_size= 0;
+        $query_cache_type ="";
+
         //Status
         $max_used_connections = 0;
 
@@ -152,6 +154,9 @@ class Controller extends \Piwik\Plugin\Controller
 
         //Variables
         foreach ($variables as $item) {
+            if($item['Variable_name'] == 'query_cache_type') {
+                $query_cache_type = $item['Value'];
+            }
             if($item['Variable_name'] == 'innodb_buffer_pool_size') {
                 $innodb_buffer_pool_size = $item['Value'];
             }
@@ -312,8 +317,14 @@ class Controller extends \Piwik\Plugin\Controller
                 $uptime = (int) $item['Value'];
             }
         }
-        if ($query_cache_size == 0) {
-            $msg = "Query cache is supported but not enabled Perhaps you should set the query_cache_size(" . $query_cache_size . ")";
+        if ($query_cache_type == 0) {
+            $msg = "The Query cache is disabled";
+            $msgFrag = "";
+            $msgUnused = "";
+            $msgSize = "";
+        }
+        else if ($query_cache_size == 0) {
+            $msg = "Query cache is supported but size is 0 perhaps you should set the query_cache_size(" . $query_cache_size . ")";
             $msgFrag = "";
             $msgUnused = "";
             $msgSize = "";
@@ -360,6 +371,7 @@ class Controller extends \Piwik\Plugin\Controller
                 $last_restart_time = date('Y-m-d H:i:s', $opcach_status['opcache_statistics']['last_restart_time']);
         }
         $result = [ "query_cache_size" => round($query_cache_size/ 1024 / 1024,2),
+                    "query_cache_type" => $query_cache_type,
                    "qcache_free_memory" => round($qcache_free_memory/ 1024 / 1024,2),
                    "qcache_fill_ratio" => round($qcache_mem_fill_ratioHR,2),
                    "qcache_percent_fragmentedHR" => round($qcache_percent_fragmentedHR,2),

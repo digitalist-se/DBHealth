@@ -2,6 +2,11 @@
 
 Here goes the changelog text.
 
+v0.0.11
+Improved styling and formatting
+Use GLOBAL variables and statuses in tests
+Avoid checking deleted segments
+
 v0.0.10
 Securing functions by not making them public and also adding new report for problematic segments
 

@@ -54,13 +54,11 @@
         <div class="card-content">
             <h3>Memory usage</h3>
             <ul>
-                <li>max_memory: {{ memUsage.max_memory | round(0, 'ceil')}} MB</li>
-                <li>per_thread_buffers: {{ memUsage.per_thread_buffers | round(0, 'ceil')}} MB</li>
-                <li>global_buffers: {{ memUsage.global_buffers | round(0, 'ceil')}} MB</li>
-                <li>total_memory: {{ memUsage.total_memory | round(0, 'ceil')}} MB</li>
-                <li>effective_tmp_table_size: {{ memUsage.effective_tmp_table_size | round(0, 'ceil')}} MB</li>
+                <li>Max memory <b>{{ memUsage.max_memory | round(0, 'ceil')}} MB</b> - The highest usage of memory so far (based on used connections)  (Should not exceeds 90% of your servers physical memory)</li>
+                <li>Total memory <b>{{ memUsage.total_memory | round(0, 'ceil')}} MB</b> - The highest possible usage of memory (based on max connections):  (Should not exceeds  95% of your servers physical memory)</li>
+                <li>Per thread_buffer <b>{{ memUsage.per_thread_buffers | round(0, 'ceil')}} MB</b> - Maximum memory that can be consumed by a thread: </li>
+                <li>Global buffers <b>{{ memUsage.global_buffers | round(0, 'ceil')}} MB</b> - (innodb_buffer_pool_size + innodb_additional_mem_pool_size + innodb_log_buffer_size + key_buffer_size + query_cache_size) </li>
             </ul>
-            <p><b>Note:</b> Max memory shoould not exceeds 90% of your servers physical memory</p>
         </div>
     </div>
     <div class="card">
@@ -140,10 +138,10 @@
     <div class="card">
         <div class="card-content">
             <h3>Query Cache</h3>
-            {% if queryCacheCheck.query_cache_type == "OFF" %}
-            <p class="alert alert-success">Your query cache is disabled this is good!<br></p>
+            {% if queryCacheCheck.query_cache_type == 'OFF' %}
+            <p class="alert alert-success">Your query cache is disabled. This is good, since the Query cache is depricated from MySQL 5.7 and will be removed in MySQL 8.0. (query_cache_type = 'OFF')<br></p>
             {% else %}
-            <p class="alert alert-warning">You are using the query cache but the general recommendation is to disable Query cache since it is depricated from MySQL 5.7 and will be removed in MySQL 8.0To disable the query cache simply set: <b>query_cache_type = OFF</b>
+            <p class="alert alert-warning">You are using the query cache but the general recommendation is to disable Query cache since it is depricated from MySQL 5.7 and will be removed in MySQL 8.0 To disable the query cache simply set: <b>query_cache_type = OFF</b>
             </p>
 
             <h4>Since you are using the query cache we present some stats below</h4>
@@ -261,10 +259,22 @@
     <div class="card">
         <div class="card-content">
             <h3>Innodb Buffer pool</h3>
+            {% if getBufferpoolTest.innodb_buffer_pool_size < 1023  %}
+            <p class="alert alert-warning"> Your innodb_buffer_pool_size is alarmingly low for a production system. This indicates that you never configured your MYSQL instance and this will lead to a very slow Matomo database when your database grows.
+            </p>
+            {% else %}
+            <p class="alert alert-success">Your innodb_buffer_pool_size is set higer than 1024 MB, which indicates you made some adjustments but make sure you adopt the bufferpool according to your  server memory</p>
+            {% endif %}
+            <br>
+            <p>The general recommendation is to set innodb_buffer_pool_size to at least 80% of the RAM available to MySQL (and even a higher ratio if you have more than 8G of RAM on you server). </p>           <br>
+
+
+
             <ul>
                 <li>Current InnoDB bufferpool free: {{getBufferpoolTest.percent_innodb_buffer_pool_free}} MB</li>
                 <li>Current InnoDB bufferpool zize: {{getBufferpoolTest.innodb_buffer_pool_size}} MB</li>
             </ul>
+
             {% if getBufferpoolTest.innodb_flush_log_at_trx_commit != 2  %}
             <p class="alert alert-warning">You should change your database setting innodb_flush_log_at_trx_commit to 2 for optimal performance<br>
                 Your current value is {{getBufferpoolTest.innodb_flush_log_at_trx_commit}}<br>

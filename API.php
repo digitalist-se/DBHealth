@@ -42,7 +42,7 @@ class API extends \Piwik\Plugin\API
         try {
             $dataTable = new DataTable();
 
-            $query = "SELECT name,idsegment,definition,enable_only_idsite,ts_created,ts_last_edit FROM `matomo_segment` where definition like '%@%' and deleted not like '1' ";
+            $query = "SELECT name,idsegment,definition,login,enable_only_idsite,ts_created,ts_last_edit FROM `matomo_segment` where definition like '%@%' and deleted not like '1' ";
             $result = $this->getDb()->fetchAssoc($query);
 
             foreach ($result as $item) {
@@ -51,6 +51,7 @@ class API extends \Piwik\Plugin\API
                           'Idsegment' => $item['idsegment'],
                           'Definition' => $item['definition'],
                           'Used on siteId (0=all)' => $item['enable_only_idsite'],
+                          'Created by' => $item['login'],
                           'Creation date' => $item['ts_created'],
                           'Last updated' => $item['ts_last_edit']
                          )

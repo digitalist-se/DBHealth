@@ -142,7 +142,7 @@ class Controller extends \Piwik\Plugin\Controller
         $innodb_log_buffer_size= 0;
         $key_buffer_size = 0;
         $query_cache_size= 0;
-        $query_cache_type ="";
+        $query_cache_type =0;
 
         //Status
         $max_used_connections = 0;
@@ -221,15 +221,17 @@ class Controller extends \Piwik\Plugin\Controller
 
         $global_buffers = $innodb_buffer_pool_size + $innodb_additional_mem_pool_size + $innodb_log_buffer_size + $key_buffer_size + $query_cache_size;
 
-        $max_memory = $global_buffers + $per_thread_max_buffers;
-        $total_memory = $global_buffers + $per_thread_buffers;
+        $max_memory = $global_buffers + $per_thread_max_buffers; // Max used connections possible
+        $total_memory = $global_buffers + $per_thread_buffers; // Max connections possible
 
 
         $result = [ "max_memory" => round($max_memory/ 1024 / 1024,2),
                     "per_thread_buffers" => round($per_thread_buffers/ 1024 / 1024,2),
                     "global_buffers" => round($global_buffers/ 1024 / 1024,2),
                     "total_memory" => round($total_memory/ 1024 / 1024,2),
-                    "effective_tmp_table_size" => round($effective_tmp_table_size/ 1024 / 1024,2)
+                    "effective_tmp_table_size" => round($effective_tmp_table_size/ 1024 / 1024,2),
+                    "tmp_table_size" => round($tmp_table_size/ 1024 / 1024,2),
+                    "max_heap_table_size" => round($max_heap_table_size/ 1024 / 1024,2)
                   ];
 
 
@@ -257,6 +259,7 @@ class Controller extends \Piwik\Plugin\Controller
         $query_cache_size = 0;
         $query_cache_limit = 0;
         $query_cache_min_res_unit = 0;
+        $query_cache_type = 0;
 
         //Status
         $qcache_free_memory = 0;
@@ -277,6 +280,9 @@ class Controller extends \Piwik\Plugin\Controller
 
         //Variables
         foreach ($variables as $item) {
+            if($item['Variable_name'] == 'query_cache_type') {
+                $query_cache_type = $item['Value'];
+            }
             if($item['Variable_name'] == 'query_cache_size') {
                 $query_cache_size = $item['Value'];
             }

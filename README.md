@@ -6,7 +6,7 @@ This plugin simply gives you a sub menu in the admin section called
 
 
 
-## We have 4 menu items / features:
+## We have 5 menu items / features:
 * DB Status variables 
 
   Than runs "SHOW STATUS" in MySQL
@@ -36,3 +36,7 @@ This plugin simply gives you a sub menu in the admin section called
   <img align="left" src="./docs/images/q-cache.png" alt="Query Qache" style="zoom:50%;" />
 
   <img align="left" src="./docs/images/tmp-tables.png" alt="Tmp tables" style="zoom:50%;" />
+   
+ Show problematics segments
+ This page will list segments containing wildcards and display some guidelines on how to fix them.
+ 

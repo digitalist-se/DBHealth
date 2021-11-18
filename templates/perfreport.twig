@@ -43,11 +43,12 @@
         <div class="card-content">
             {% set uptime = queryCacheCheck.uptime | round(0, 'ceil') %}
             {% if uptime < 86400 %}
-            <p class="alert alert-warning">Your database was restarted only {{ (uptime / 60) |round(0, 'ceil') }} minutes ago.<br>
-                Our calculation depend on that database status variables are correct and depending on your system load this can take some time. Make sure you come back again and check before you do any drastic actions. <br>
-                {% else %}
-            <p>Your Database has been running for {{ (uptime / 60) |round(0, 'ceil') }} hours so hopefully you can rely on the database status variables that we use to calculate performance.<br>
-                {% endif %}
+                <div class="alert alert-warning">Your database was restarted only {{ (uptime / 60) |round(0, 'ceil') }} minutes ago.<br>
+                    Our calculation depend on that database status variables are correct and depending on your system load this can take some time. Make sure you come back again and check before you do any drastic actions. <br>
+                </div>
+            {% else %}
+                <p>Your Database has been running for {{ (uptime / 60) |round(0, 'ceil') }} hours so hopefully you can rely on the database status variables that we use to calculate performance.<br>
+            {% endif %}
         </div>
     </div>
     <div class="card">
@@ -73,17 +74,17 @@
         <div class="card-content">
             <h3>Temporary tables and files</h3>
             {% if tmpTableCheck.tmp_disk_tables_ratio > 20 %}
-            <p class="alert alert-warning">Your tmp_disk_tables_ratio is {{ tmpTableCheck.tmp_disk_tables_ratio }} %. <br>
+            <div class="alert alert-warning">Your tmp_disk_tables_ratio is {{ tmpTableCheck.tmp_disk_tables_ratio }} %. <br>
                 Many temporary tables are being written to disk instead of being kept in memory.<br>
                 Created tmp disk tables: {{ tmpTableCheck.tmp_disk_tables }} <br>
                 Increasing max_heap_table_size and tmp_table_size might help. <br>
                 However some temporary tables are always being written to disk, independent of the value of these variables. <br>
                 To eliminate these you will have to rewrite your queries to avoid those conditions (Within a temporary table: <br>
                 Presence of a BLOB or TEXT column or presence of a column bigger than 512 bytes) as mentioned in the <a href="https://dev.mysql.com/doc/refman/8.0/en/internal-temporary-tables.html">MySQL Documentation</a>
-            </p>
+            </div>
             {% else %}
-            <p class="alert alert-success">Your tmp_disk_tables_ratio is {{ tmpTableCheck.tmp_disk_tables_ratio }} % seems fine.<br>
-            </p>
+            <div class="alert alert-success">Your tmp_disk_tables_ratio is {{ tmpTableCheck.tmp_disk_tables_ratio }} % seems fine.<br>
+            </div>
 
             {% endif %}
             The calculation formula for tmp_disk_tables_ratio is: <BR>
@@ -91,46 +92,46 @@
 
             {% set dbratio = tmpTableCheck.created_tmp_tables / uptime  %}
             {% if dbratio > 20 %}
-            <p class="alert alert-danger">The ratio (created_tmp_tables / uptime) is {{ dbratio | round(2, 'ceil') }} wich is alarming high. (higher than 20)<br>
+            <div class="alert alert-danger">The ratio (created_tmp_tables / uptime) is {{ dbratio | round(2, 'ceil') }} wich is alarming high. (higher than 20)<br>
                 You definitley need to look into if your settings are ok
-            </p>
+            </div>
             {% else %}
-            <p class="alert alert-success">The ratio (created_tmp_tables / uptime) is {{ dbratio | round(2, 'ceil') }} wich fine (should be lower than 20).<br>
+            <div class="alert alert-success">The ratio (created_tmp_tables / uptime) is {{ dbratio | round(2, 'ceil') }} wich fine (should be lower than 20).<br>
+            </div>
                 {% endif %}
 
 
                 {% set diskratio = tmpTableCheck.tmp_disk_tables / uptime   %}
                 {% if diskratio  > 1 %}
-            </p>
-            <p class="alert alert-danger">The ratio (tmp_disk_tables / uptime) is {{ diskratio|round(2, 'ceil') }} wich is alarming high (higher than 1).<br>
+            <div class="alert alert-danger">The ratio (tmp_disk_tables / uptime) is {{ diskratio|round(2, 'ceil') }} wich is alarming high (higher than 1).<br>
                 You definitley need to look into lowering the disk io.
-            </p>
+            </div>
             {% else %}
-            <p class="alert alert-success">The ratio (tmp_disk_tables / uptime) is {{ diskratio|round(2, 'ceil') }} wich fine (should be lower than 1).<br>
+            <div class="alert alert-success">The ratio (tmp_disk_tables / uptime) is {{ diskratio|round(2, 'ceil') }} wich fine (should be lower than 1).<br>
                 {% endif %}
 
                 {% set o_file_rate = tmpTableCheck.open_files / uptime  * 60 * 60 %}
 
                 {% if o_file_rate > 5  %}
-            </p>
-            <p class="alert alert-warning">The rate of opening files (Open_files / Uptime) is high. {{o_file_rate |round(2, 'ceil')}} per hour (should be below 5)<br>
+            </div>
+            <div class="alert alert-warning">The rate of opening files (Open_files / Uptime) is high. {{o_file_rate |round(2, 'ceil')}} per hour (should be below 5)<br>
                 Consider increasing open_files_limit, and check the error log when restarting after changing open_files_limit.<br>
                 Note that your uptime of {{(uptime / 60) | round(0, 'ceil')}} minutes is quite low, this will affect the rate so you might want to wait some time before you make any changes.
-            </p>
+            </div>
             {% else %}
-            <p class="alert alert-success">The rate of opening files (Open_files / Uptime) seems good: {{o_file_rate |round(2, 'ceil')}} per hour (should be below 5)<br>
-            </p>
+            <div class="alert alert-success">The rate of opening files (Open_files / Uptime) seems good: {{o_file_rate |round(2, 'ceil')}} per hour (should be below 5)<br>
+            </div>
             {% endif %}
 
             {% set o_table_rate = tmpTableCheck.opened_tables / uptime  * 60 * 60 %}
             {% if o_table_rate > 10 and uptime > 10800 %}
-            <p class="alert alert-warning">The rate of opening tables (Opened_tables / Uptime) is high. {{o_table_rate |round(2, 'ceil')}} per hour (should be below 10)<br>
+            <div class="alert alert-warning">The rate of opening tables (Opened_tables / Uptime) is high. {{o_table_rate |round(2, 'ceil')}} per hour (should be below 10)<br>
                 Opening tables requires disk I/O which is costly. Increasing table_open_cache might avoid this.<br>
                 Note that your uptime of {{(uptime / 60) | round(0, 'ceil')}} minutes is quite low, this will affect the rate so you might want to wait some time before you make any changes.
-            </p>
+            </div>
             {% else %}
-            <p class="alert alert-success">The rate of opening tables (Opened_tables / Uptime) seems good: {{o_table_rate |round(2, 'ceil')}} per hour (should be below 10)<br>
-            </p>
+            <div class="alert alert-success">The rate of opening tables (Opened_tables / Uptime) seems good: {{o_table_rate |round(2, 'ceil')}} per hour (should be below 10)<br>
+            </div>
             {% endif %}
 
         </div>
@@ -139,45 +140,45 @@
         <div class="card-content">
             <h3>Query Cache</h3>
             {% if queryCacheCheck.query_cache_type == 'OFF' %}
-            <p class="alert alert-success">Your query cache is disabled. This is good, since the Query cache is depricated from MySQL 5.7 and will be removed in MySQL 8.0. (query_cache_type = 'OFF')<br></p>
+            <div class="alert alert-success">Your query cache is disabled. This is good, since the Query cache is depricated from MySQL 5.7 and will be removed in MySQL 8.0. (query_cache_type = 'OFF')<br></div>
             {% else %}
-            <p class="alert alert-warning">You are using the query cache but the general recommendation is to disable Query cache since it is depricated from MySQL 5.7 and will be removed in MySQL 8.0 To disable the query cache simply set: <b>query_cache_type = OFF</b>
-            </p>
+            <div class="alert alert-warning">You are using the query cache but the general recommendation is to disable Query cache since it is depricated from MySQL 5.7 and will be removed in MySQL 8.0 To disable the query cache simply set: <b>query_cache_type = OFF</b>
+            </div>
 
             <h4>Since you are using the query cache we present some stats below</h4>
 
             <h4>Query Cache Fragmentation</h4>
 
             {% if queryCacheCheck.qcache_percent_fragmentedHR > 20 %}
-            <p class="alert alert-warning">The Query Cache is {{queryCacheCheck.qcache_percent_fragmentedHR}} % fragmented<br>
+            <div class="alert alert-warning">The Query Cache is {{queryCacheCheck.qcache_percent_fragmentedHR}} % fragmented<br>
                 Run "FLUSH QUERY CACHE" periodically to defragment the query cache memory
                 If you have a lot of small SQL queries in your application lowering query_cache_min_res_unit might reduce fragmentation."
-            </p>
+            </div>
             {% else %}
-            <p class="alert alert-success">The Query Cache fragmentation is ({{queryCacheCheck.qcache_percent_fragmentedHR}} %) which is fine<br>
+            <div class="alert alert-success">The Query Cache fragmentation is ({{queryCacheCheck.qcache_percent_fragmentedHR}} %) which is fine<br>
                 {% endif %}
             <h4>Query Cache Fill ratio</h4>
             {% if queryCacheCheck.qcache_fill_ratio < 25 %}
-            <p class="alert alert-warning">
+            <div class="alert alert-warning">
                 Your query_cache_size of {{ queryCacheCheck.query_cache_size | rawSafeDecoded}} MB might be unnecessary high (resources might be used somewhere else)
                 A to big query_cache_size might actually slow down a high traffic database.
                 Try lowering the value untill your hitrate starts to drop
                 Also try to lower the query_cache_min_res_unit to see if your database will cache more querys.
                 The qcache_fill_ratio is only {{queryCacheCheck.qcache_fill_ratio}} %
-            </p>
+            </div>
             {% else %}
-            <p class="alert alert-success">Your Query Cache Fill ratio is {{queryCacheCheck.qcache_fill_ratio}} % wich us fine</p>
+            <div class="alert alert-success">Your Query Cache Fill ratio is {{queryCacheCheck.qcache_fill_ratio}} % wich us fine</div>
             {% endif %}
 
             {% set uptime = queryCacheCheck.uptime | round(0, 'ceil') %}
 
             {% set q_hitrate = queryCacheCheck.qcache_hits / (queryCacheCheck.qcache_hits + queryCacheCheck.qcache_inserts )*100  %}
             {% if q_hitrate < 80 %}
-            <p class="alert alert-warning">Your Query Cache hit ratio is {{q_hitrate |round(2, 'ceil')}} %, this is to low. (should be above 80%)<br>
-                However if your uptime is low this might be the reason, so make sure to wait untill your database has got enough traffic. </p>
+            <div class="alert alert-warning">Your Query Cache hit ratio is {{q_hitrate |round(2, 'ceil')}} %, this is to low. (should be above 80%)<br>
+                However if your uptime is low this might be the reason, so make sure to wait untill your database has got enough traffic. </div>
             {% else %}
-            <p class="alert alert-success">Your Query Cache hit ratio is {{q_hitrate |round(2, 'ceil')}} % which is fine
-            </p>
+            <div class="alert alert-success">Your Query Cache hit ratio is {{q_hitrate |round(2, 'ceil')}} % which is fine
+            </div>
             <br>
             <h4>Query Cache Status variables</h4>
 
@@ -260,10 +261,10 @@
         <div class="card-content">
             <h3>Innodb Buffer pool</h3>
             {% if getBufferpoolTest.innodb_buffer_pool_size < 1023  %}
-            <p class="alert alert-warning"> Your innodb_buffer_pool_size is alarmingly low for a production system. This indicates that you never configured your MYSQL instance and this will lead to a very slow Matomo database when your database grows.
-            </p>
+            <div class="alert alert-warning"> Your innodb_buffer_pool_size is alarmingly low for a production system. This indicates that you never configured your MYSQL instance and this will lead to a very slow Matomo database when your database grows.
+            </div>
             {% else %}
-            <p class="alert alert-success">Your innodb_buffer_pool_size is set higer than 1024 MB, which indicates you made some adjustments but make sure you adopt the bufferpool according to your  server memory</p>
+            <div class="alert alert-success">Your innodb_buffer_pool_size is set higer than 1024 MB, which indicates you made some adjustments but make sure you adopt the bufferpool according to your  server memory</div>
             {% endif %}
             <br>
             <p>The general recommendation is to set innodb_buffer_pool_size to at least 80% of the RAM available to MySQL (and even a higher ratio if you have more than 8G of RAM on you server). </p>           <br>
@@ -276,10 +277,10 @@
             </ul>
 
             {% if getBufferpoolTest.innodb_flush_log_at_trx_commit != 2  %}
-            <p class="alert alert-warning">You should change your database setting innodb_flush_log_at_trx_commit to 2 for optimal performance<br>
+            <div class="alert alert-warning">You should change your database setting innodb_flush_log_at_trx_commit to 2 for optimal performance<br>
                 Your current value is {{getBufferpoolTest.innodb_flush_log_at_trx_commit}}<br>
                 <a href="https://matomo.org/docs/optimize-how-to/">Read more here.</a>
-            </p>
+            </div>
             {% endif %}
 
         </div>
@@ -290,10 +291,10 @@
 
             {% set xdebug_mode = phpInfo.xdebug_mode %}
             {% if phpInfo.xdebug_status or xdebug_mode == null or xdebug_mode == off  %}
-            <p class="alert alert-success">Xdebug is not enabled, this is good in a production environment (since Xdebug will slow you application down).</p>
+            <div class="alert alert-success">Xdebug is not enabled, this is good in a production environment (since Xdebug will slow you application down).</div>
             {% else %}
-            <p class="alert alert-warning">"Xdebug is enabled, this will slow you application down and something you should be aware of. <br>
-                Only enable Xdebug when you need it to troubleshoot your code.</p>
+            <div class="alert alert-warning">"Xdebug is enabled, this will slow you application down and something you should be aware of. <br>
+                Only enable Xdebug when you need it to troubleshoot your code.</div>
             {% endif %}
         </div>
     </div>
@@ -325,21 +326,21 @@
             {% if opCacheEnabled != false %}
 
             {% if queryCacheCheck.opcach_status.cache_full %}
-            <p class="alert alert-warning">OpCache is full</p>
+            <div class="alert alert-warning">OpCache is full</div>
             {% else %}
-            <p class="alert alert-success">OpCache is not full</p>
+            <div class="alert alert-success">OpCache is not full</div>
             {% endif %}
             <br>
             {% if queryCacheCheck.opcach_status.opcache_statistics.num_cached_keys > (queryCacheCheck.opcach_status.opcache_statistics.max_cached_keys *0.9) %}
-            <p class="alert alert-warning">Your OpCache is close to not beeing able handle enough files<br>
+            <div class="alert alert-warning">Your OpCache is close to not beeing able handle enough files<br>
                 Solution: Increase opcache.max_accelerated_files setting.<br>
                 There is {{queryCacheCheck.opcach_status.opcache_statistics.num_cached_keys}} keys in the cache.<br>
                 The maximum allowed keys is {{queryCacheCheck.opcach_status.opcache_statistics.max_cached_keys}}<br>
-            </p>
+            </div>
             {% else %}
-            <p class="alert alert-success">OpCache seems to handle the cache entries in your application fine. <br>
+            <div class="alert alert-success">OpCache seems to handle the cache entries in your application fine. <br>
                 There is {{queryCacheCheck.opcach_status.opcache_statistics.num_cached_keys}} keys in the cache.<br>
-                The maximum allowed keys is {{queryCacheCheck.opcach_status.opcache_statistics.max_cached_keys}}</p>
+                The maximum allowed keys is {{queryCacheCheck.opcach_status.opcache_statistics.max_cached_keys}}</div>
             {% endif %}
 <br>
             <p>Memory assigned to OpCache {{opCacheStatus.directives['opcache.memory_consumption'] / 1024 / 1024}} MB

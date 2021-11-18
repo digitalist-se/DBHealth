@@ -11,6 +11,7 @@ use Piwik\Db;
 use Piwik\Log;
 use Piwik\Piwik;
 use Piwik\Config;
+use Piwik\Site;
 use Piwik\View;
 use Piwik\Access;
 use Piwik\Common;
@@ -687,96 +688,181 @@ class Controller extends \Piwik\Plugin\Controller
         $query = "SELECT 1";
         $result = $db::fetchAll($query);
 
-        $time_end = hrtime(true);
-        $time = $time_end  - $time_start;
-        return  $time/1e+6;
-    }
-
-      /**
-     * Visualize Table Status Variables
-     *
-     * @return string
-     */
-    public function showProblematicSegments() {
-        //Log::debug("A user accessed getMysqlVariableData()");
-        try {
-            $api = new DBHealthAPI();
-            return $this->renderTemplate(
-                'segments',
-                [
-                    'dataTable' =>  $api->getProblematicSegments()
-
-                ]
-            );
-
-        } catch (\Exception $e) {
-            return $e->getMessage();
-        }
-    }
+         $time_end = hrtime(true);
+         $time = $time_end - $time_start;
+         return $time / 1e+6;
+     }
 
     /**
      * Visualize Table Status Variables
      *
      * @return string
      */
-    public function getMysqlTableStatus() {
-        //Log::debug("A user accessed getMysqlVariableData()");
-        try {
-            $api = new DBHealthAPI();
-            return $this->renderTemplate(
-                'index',
-                [
-                    'dataTable' =>  $api->getMysqlTableStatus()
+    public function getProblematicSegments()
+    {
+        $view = \Piwik\ViewDataTable\Factory::build(
+            $defaultType = 'table',
+            $apiAction = 'DBHealth.getProblematicSegments',
+            $controllerMethod = 'DBHealth.getProblematicSegments'
+        );
+        $view->config->show_search = false;
+        $view->config->show_bar_chart = false;
+        $view->config->show_pie_chart = false;
+        $view->config->show_tag_cloud = false;
+        $view->config->no_data_message = "No potentially problematic segments";
 
-                ]
-            );
-
-        } catch (\Exception $e) {
-            return $e->getMessage();
-        }
+        $view->config->title = "List of potentially problematic segments in your Matomo installation";
+        return $view->render();
     }
 
-      /**
+
+    public function showProblematicSegments()
+    {
+        $_GET['showtitle'] = '1';
+        Piwik::checkUserHasSuperUserAccess();
+        $view = new View("@DBHealth/segments.twig");
+        // Generate the report visualization to use it in the view
+        $this->setGeneralVariablesView($view);
+        $view->report = $this->getProblematicSegments();
+        return $view->render();
+    }
+
+
+//    /**
+//     * Visualize Table Status Variables
+//     *
+//     * @return string
+//     */
+//    public function showProblematicSegments() {
+//        //Log::debug("A user accessed getMysqlVariableData()");
+//        try {
+//            $api = new DBHealthAPI();
+//            return $this->renderTemplate(
+//                'segments',
+//                [
+//                    'dataTable' =>  $api->getProblematicSegments()
+//
+//                ]
+//            );
+//
+//        } catch (\Exception $e) {
+//            return $e->getMessage();
+//        }
+//    }
+
+    /**
+     * Visualize Table Status Variables
+     *
+     * @return string
+     */
+    public function getMysqlTableStatus()
+    {
+        $view = \Piwik\ViewDataTable\Factory::build(
+            $defaultType = 'table',
+            $apiAction = 'DBHealth.getMysqlTableStatus',
+            $controllerMethod = 'DBHealth.getMysqlTableStatus'
+        );
+        $view->config->show_search = false;
+        $view->config->show_bar_chart = false;
+        $view->config->show_pie_chart = false;
+        $view->config->show_tag_cloud = false;
+
+        $view->config->title = "Test";
+        $view->config->description = "Description";
+        return $view->render();
+    }
+
+
+    /**
+     *
+     * @return string
+     */
+    public function showMysqlTableStatus()
+    {
+        $_GET['showtitle'] = '1';
+        Piwik::checkUserHasSuperUserAccess();
+        $view = new View("@DBHealth/index.twig");
+        // Generate the report visualization to use it in the view
+        $this->setGeneralVariablesView($view);
+        $view->report = $this->getMysqlTableStatus();
+        return $view->render();
+
+    }
+
+    /**
      * Visualize Setting Variables
      *
      * @return string
      */
-    public function getMysqlVariableData() {
-        //Log::debug("A user accessed getMysqlVariableData()");
-        try {
-            $api = new DBHealthAPI();
-            return $this->renderTemplate(
-                'index',
-                [
-                    'dataTable' =>  $api->getMysqlVariableData()
+    public function getMysqlVariableData()
+    {
+        $view = \Piwik\ViewDataTable\Factory::build(
+            $defaultType = 'table',
+            $apiAction = 'DBHealth.getMysqlVariableData',
+            $controllerMethod = 'DBHealth.getMysqlVariableData'
+        );
+        $view->config->show_search = false;
+        $view->config->show_bar_chart = false;
+        $view->config->show_pie_chart = false;
+        $view->config->show_tag_cloud = false;
 
-                ]
-            );
-
-        } catch (\Exception $e) {
-            return $e->getMessage();
-        }
+        $view->config->title = "Test";
+        $view->config->description = "Description";
+        return $view->render();
     }
-      /**
+
+    /**
+     *
+     * @return string
+     */
+    public function showMysqlVariableData()
+    {
+        $_GET['showtitle'] = '1';
+        Piwik::checkUserHasSuperUserAccess();
+        $view = new View("@DBHealth/index.twig");
+        // Generate the report visualization to use it in the view
+        $this->setGeneralVariablesView($view);
+        $view->report = $this->getMysqlVariableData();
+        return $view->render();
+
+    }
+
+
+    /**
      * Visualize Status Variables
      *
      * @return string
      */
-    public function getMysqlStatus() {
-        //Log::debug("A user accessed getMysqlstatus()");
-        try {
-            $api = new DBHealthAPI();
-            return $this->renderTemplate(
-                'index',
-                [
-                    'dataTable' =>  $api->getMysqlStatusData()
+    public function getMysqlStatusData()
+    {
+        $view = \Piwik\ViewDataTable\Factory::build(
+            $defaultType = 'table',
+            $apiAction = 'DBHealth.getMysqlStatusData',
+            $controllerMethod = 'DBHealth.getMysqlStatusData'
+        );
+        $view->config->show_search = false;
+        $view->config->show_bar_chart = false;
+        $view->config->show_pie_chart = false;
+        $view->config->show_tag_cloud = false;
 
-                ]
-            );
-
-        } catch (\Exception $e) {
-            return $e->getMessage();
-        }
+        $view->config->title = "Test";
+        $view->config->description = "Description";
+        return $view->render();
     }
 
+    /**
+     *
+     * @return string
+     */
+    public function showMysqlStatusData()
+    {
+        $_GET['showtitle'] = '1';
+        Piwik::checkUserHasSuperUserAccess();
+        $view = new View("@DBHealth/index.twig");
+        // Generate the report visualization to use it in the view
+        $this->setGeneralVariablesView($view);
+        $view->report = $this->getMysqlStatusData();
+        return $view->render();
+
+    }
 }

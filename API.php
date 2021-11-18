@@ -35,35 +35,26 @@ class API extends \Piwik\Plugin\API
      * @return DataTable
      */
     function getProblematicSegments() {
-        if (!Piwik::hasUserSuperUserAccess()) {
-            throw new \Exception("No access to DBHealth");
-            Piwik::checkUserHasAdminAccess($initialIdSite);
+        Piwik::checkUserHasSuperUserAccess();
+        $dataTable = new DataTable();
+
+        $query = "SELECT name,idsegment,definition,login,enable_only_idsite,ts_created,ts_last_edit FROM `matomo_segment` where definition like '%@%' and deleted not like '1' ";
+        $result = $this->getDb()->fetchAssoc($query);
+
+        foreach ($result as $item) {
+            $dataTable->addRowsFromSimpleArray(array(
+                array('Name' => $item['name'],
+                      'Idsegment' => $item['idsegment'],
+                      'Definition' => $item['definition'],
+                      'Used on siteId (0=all)' => $item['enable_only_idsite'],
+                      'Created by' => $item['login'],
+                      'Creation date' => $item['ts_created'],
+                      'Last updated' => $item['ts_last_edit']
+                     )
+            ));
+
         }
-        try {
-            $dataTable = new DataTable();
-
-            $query = "SELECT name,idsegment,definition,login,enable_only_idsite,ts_created,ts_last_edit FROM `matomo_segment` where definition like '%@%' and deleted not like '1' ";
-            $result = $this->getDb()->fetchAssoc($query);
-
-            foreach ($result as $item) {
-                $dataTable->addRowsFromSimpleArray(array(
-                    array('Name' => $item['name'],
-                          'Idsegment' => $item['idsegment'],
-                          'Definition' => $item['definition'],
-                          'Used on siteId (0=all)' => $item['enable_only_idsite'],
-                          'Created by' => $item['login'],
-                          'Creation date' => $item['ts_created'],
-                          'Last updated' => $item['ts_last_edit']
-                         )
-                ));
-
-            }
-            return $dataTable;
-
-        } catch (\Exception $e) {
-            return $e->getMessage();
-        }
-
+        return $dataTable;
     }
 
 
@@ -75,28 +66,20 @@ class API extends \Piwik\Plugin\API
      */
     function getMysqlStatusData()
     {
-        if (!Piwik::hasUserSuperUserAccess()) {
-            throw new \Exception("No access to DBHealth");
-            Piwik::checkUserHasAdminAccess($initialIdSite);
+        Piwik::checkUserHasSuperUserAccess();
+        $dataTable = new DataTable();
+
+        $query = "SHOW STATUS";
+        $result = $this->getDb()->fetchAssoc($query);
+
+        foreach ($result as $item) {
+            $dataTable->addRowsFromSimpleArray(array(
+                array('Name' => $item['Variable_name'], 'Value' => $item['Value'])
+            ));
+
         }
+        return $dataTable;
 
-        try {
-            $dataTable = new DataTable();
-
-            $query = "SHOW STATUS";
-            $result = $this->getDb()->fetchAssoc($query);
-
-            foreach ($result as $item) {
-                $dataTable->addRowsFromSimpleArray(array(
-                    array('Name' => $item['Variable_name'], 'Value' => $item['Value'])
-                ));
-
-            }
-            return $dataTable;
-
-        } catch (\Exception $e) {
-            return $e->getMessage();
-        }
 
     }
 
@@ -106,37 +89,29 @@ class API extends \Piwik\Plugin\API
      * @return DataTable
      */
     function getMysqlTableStatus() {
-        if (!Piwik::hasUserSuperUserAccess()) {
-            throw new \Exception("No access to DBHealth");
-            Piwik::checkUserHasAdminAccess($initialIdSite);
+        Piwik::checkUserHasSuperUserAccess();
+        $dataTable = new DataTable();
+
+        $query = "SHOW TABLE STATUS";
+        $result = $this->getDb()->fetchAssoc($query);
+
+        foreach ($result as $item) {
+            $dataTable->addRowsFromSimpleArray(array(
+                array('Name' => $item['Name'],
+                      'Collation' => $item['Collation'],
+                      'Engine' => $item['Engine'],
+                      'Rows' => $item['Rows'],
+                      'Avg_row_length' => $item['Avg_row_length'],
+                      'Data_length' => $item['Data_length'],
+                      'Max_data_length' => $item['Max_data_length'],
+                      'Index_length' => $item['Index_length'],
+                      'Data_free' => $item['Data_free'],
+                      'Checksum' => $item['Checksum']
+                     )
+            ));
         }
-        try {
-            $dataTable = new DataTable();
+        return $dataTable;
 
-            $query = "SHOW TABLE STATUS";
-            $result = $this->getDb()->fetchAssoc($query);
-
-            foreach ($result as $item) {
-                $dataTable->addRowsFromSimpleArray(array(
-                    array('Name' => $item['Name'],
-                          'Collation' => $item['Collation'],
-                          'Engine' => $item['Engine'],
-                          'Rows' => $item['Rows'],
-                          'Avg_row_length' => $item['Avg_row_length'],
-                          'Data_length' => $item['Data_length'],
-                          'Max_data_length' => $item['Max_data_length'],
-                          'Index_length' => $item['Index_length'],
-                          'Data_free' => $item['Data_free'],
-                          'Checksum' => $item['Checksum']
-                         )
-                ));
-
-            }
-            return $dataTable;
-
-        } catch (\Exception $e) {
-            return $e->getMessage();
-        }
 
     }
     /**
@@ -146,28 +121,19 @@ class API extends \Piwik\Plugin\API
      */
     function getMysqlVariableData()
     {
-        if (!Piwik::hasUserSuperUserAccess()) {
-            throw new \Exception("No access to DBHealth");
-            Piwik::checkUserHasAdminAccess($initialIdSite);
+        Piwik::checkUserHasSuperUserAccess();
+        $dataTable = new DataTable();
+
+        $query = "SHOW VARIABLES";
+        $result = $this->getDb()->fetchAssoc($query);
+
+        foreach ($result as $item) {
+            $dataTable->addRowsFromSimpleArray(array(
+                array('Name' => $item['Variable_name'], 'Value' => $item['Value'])
+            ));
+
         }
-        try {
-            $dataTable = new DataTable();
-
-            $query = "SHOW VARIABLES";
-            $result = $this->getDb()->fetchAssoc($query);
-
-            foreach ($result as $item) {
-                $dataTable->addRowsFromSimpleArray(array(
-                    array('Name' => $item['Variable_name'], 'Value' => $item['Value'])
-                ));
-
-            }
-            return $dataTable;
-
-        } catch (\Exception $e) {
-            return $e->getMessage();
-        }
-
+        return $dataTable;
     }
 
 

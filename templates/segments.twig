@@ -6,41 +6,14 @@
         <p>When you create segments in Matomo, this means that there will be a new "job" and archiveing process added to Matomo under the hood. Adding segments with the filter <b>Contains</b> or <b>Does not Contain</b> can be very dangerous in a high traffic Matomo environments, since these segments will generate db queries that can not use indexes in the database properly.</p>
         <p>The easiest option for segments is to insteas try to use a <b>Starts with</b> filter instead (if possible). <a href="https://developer.matomo.org/api-reference/reporting-api-segmentation" target="_blank">Read more on segment definitions here</a></p>
         <p>Note that if you change a segment definition you will need to invalidate and reprocess you data (backwards in time) if you want the reports to work historically.
-        <p>For example if you change idsegemnt 1 with the new definition eventCategory=^MyEvent
-            <br>First invalidate the historical data: <b> ./console core:invalidate-report-data --sites=1 --segment=eventCategory=^MyEvent --dates=2021-01-01,2021-08-01</b>
-            <br>Then reprocess it: <b>./console core:archive --force-idsegments=1 --force-idsites=1 --force-date-range=2021-01-01,2021-08-01 </b>
+        <p>For example if you change idsegemnt 1 with the new definition <code>eventCategory=^MyEvent</code>
+            <br>First invalidate the historical data: <code> ./console core:invalidate-report-data --sites=1 --segment=eventCategory=^MyEvent --dates=2021-01-01,2021-08-01</code>
+            <br>Then reprocess it: <code>./console core:archive --force-idsegments=1 --force-idsites=1 --force-date-range=2021-01-01,2021-08-01 </code>
         </p>
 
         <a href="https://matomo.org/faq/how-to/faq_59/" target="_blank">Read more about reprocessing data in Matomo here</a>
     </div>
 </div>
-<div class="card">
-    <div class="card-content">
-        <h2>List of potentially problematic segments in your Matomo installation</h2>
-        <div class="dataTableWrapper">
-            <div class="dataTableScroller row">
-                {{ dataTable | raw }}
-            </div>
-        </div>
-    </div>
-</div>
-<style>
-    .row {
-        padding-left: 20px;
-        font-size: 15px;
-        font-weight: 700;
-    }
+    {{ report | raw }}
 
-    .row td {
-        border: 1px solid;
-        padding: 5px;
-
-    }
-
-    .dataTableWrapper td:nth-child(3) {
-        max-width: 350 px;
-        overflow-wrap: anywhere;
-    }
-
-</style>
 {% endblock %}

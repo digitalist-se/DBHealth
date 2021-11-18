@@ -728,27 +728,6 @@ class Controller extends \Piwik\Plugin\Controller
     }
 
 
-//    /**
-//     * Visualize Table Status Variables
-//     *
-//     * @return string
-//     */
-//    public function showProblematicSegments() {
-//        //Log::debug("A user accessed getMysqlVariableData()");
-//        try {
-//            $api = new DBHealthAPI();
-//            return $this->renderTemplate(
-//                'segments',
-//                [
-//                    'dataTable' =>  $api->getProblematicSegments()
-//
-//                ]
-//            );
-//
-//        } catch (\Exception $e) {
-//            return $e->getMessage();
-//        }
-//    }
 
     /**
      * Visualize Table Status Variables

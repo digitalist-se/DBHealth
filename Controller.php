@@ -426,7 +426,8 @@ class Controller extends \Piwik\Plugin\Controller
         $tmp_disk_tables = 0;
         $created_tmp_tables = 0;
         $tmp_disk_tables_ratio = 0;
-        $pen_files = 0;
+        $open_files = 0;
+        $opened_files = 0;
         $percent_innodb_buffer_pool_free = 0;
         $opened_tables = 0;
 
@@ -451,8 +452,11 @@ class Controller extends \Piwik\Plugin\Controller
                 $max_used_connections = (int) $item['Value'];
             }
             if($item['Variable_name'] == 'Open_files') {
-                $pen_files = (int) $item['Value'];
+                $open_files = (int) $item['Value'];
             }
+            if($item['Variable_name'] == 'Opened_files') {
+                $opened_files = (int) $item['Value'];
+            }            
             if($item['Variable_name'] == 'Opened_tables') {
                 $opened_tables = (int) $item['Value'];
             }
@@ -473,7 +477,8 @@ class Controller extends \Piwik\Plugin\Controller
                    "created_tmp_tables" => $created_tmp_tables,
                    "tmp_disk_tables_ratio" => round($tmp_disk_tables_ratio,2),
                    "percent_innodb_buffer_pool_free" => $percent_innodb_buffer_pool_free,
-                   "open_files" => $pen_files,
+                   "open_files" => $open_files,
+                   "opened_files" => $opened_files,
                    "opened_tables" => $opened_tables
                   ];
 

@@ -11,6 +11,7 @@ use Piwik\Db;
 use Piwik\Log;
 use Piwik\Piwik;
 use Piwik\Config;
+use Piwik\Site;
 use Piwik\View;
 use Piwik\Access;
 use Piwik\Common;
@@ -90,16 +91,14 @@ class Controller extends \Piwik\Plugin\Controller
         if (!extension_loaded('Zend OPcache')) {
             return null;
         }
-        else
-            return opcache_get_configuration();
+        return opcache_get_configuration();
     }
     function opCacheEnabled()
     {
         if (!extension_loaded('Zend OPcache')) {
             return false;
         }
-        else
-            return true;
+        return true;
     }
     /**
      * Return Database Status variables
@@ -116,7 +115,7 @@ class Controller extends \Piwik\Plugin\Controller
     /**
      * Calculate Mem usage in DB
      *
-     * @return object
+     * @return array
      */
     function memUsage()
     {
@@ -209,10 +208,11 @@ class Controller extends \Piwik\Plugin\Controller
             }
         }
 
-        if ($max_heap_table_size < $tmp_table_size)
+        if ($max_heap_table_size < $tmp_table_size) {
             $effective_tmp_table_size=$max_heap_table_size;
-        else
+        } else {
             $effective_tmp_table_size=$tmp_table_size;
+        }
 
 
         $per_thread_buffers = ($read_buffer_size + $read_rnd_buffer_size + $sort_buffer_size + $thread_stack + $join_buffer_size + $binlog_cache_size) * $max_connections;
@@ -243,7 +243,7 @@ class Controller extends \Piwik\Plugin\Controller
     /**
      * Calculate  Query Cache usage in DB
      *
-     * @return object
+     * @return array
      */
     function queryCacheCheck()
     {
@@ -288,7 +288,8 @@ class Controller extends \Piwik\Plugin\Controller
             }
             if($item['Variable_name'] == 'query_cache_limit') {
                 $query_cache_limit = $item['Value'];
-            }                if($item['Variable_name'] == 'query_cache_min_res_unit') {
+            }
+            if($item['Variable_name'] == 'query_cache_min_res_unit') {
                 $query_cache_min_res_unit = $item['Value'];
             }
 
@@ -364,17 +365,16 @@ class Controller extends \Piwik\Plugin\Controller
 
 
         }
-        $opcach_status;
-        $last_restart_time;
         if (!extension_loaded('Zend OPcache')) {
             $opcach_status = null;
         }
         else {
             $opcach_status = opcache_get_status(false);
-            if( !isset($status['opcache_statistics']['last_restart_time']))
+            if( !isset($status['opcache_statistics']['last_restart_time'])) {
                  $last_restart_time = "never";
-            else
+            } else {
                 $last_restart_time = date('Y-m-d H:i:s', $opcach_status['opcache_statistics']['last_restart_time']);
+            }
         }
         $result = [ "query_cache_size" => round($query_cache_size/ 1024 / 1024,2),
                     "query_cache_type" => $query_cache_type,
@@ -402,11 +402,11 @@ class Controller extends \Piwik\Plugin\Controller
     /**
      * Calculate Hours Mins from seconds
      *
-     * @return object[hours, minutes]
+     * @return string[hours, minutes]
      */
      function convertToHoursMins($time, $format = '%02d:%02d') {
         if ($time < 1) {
-            return;
+            return "";
         }
         $hours = floor($time / 60);
         $minutes = ($time % 60);
@@ -416,7 +416,7 @@ class Controller extends \Piwik\Plugin\Controller
     /**
      * Calculate Database Disk usage usage in DB
      *
-     * @return object
+     * @return array
      */
     function tmpTableCheck()
     {
@@ -461,10 +461,11 @@ class Controller extends \Piwik\Plugin\Controller
 
 
         //Calc $tmp_disk_tables_ratio ratio
-        if ($tmp_disk_tables == 0 )
+        if ($tmp_disk_tables == 0 ) {
             $tmp_disk_tables_ratio = 0;
-        else
+        } else {
             $tmp_disk_tables_ratio = (($tmp_disk_tables * 100 / ( $created_tmp_tables + $tmp_disk_tables)));
+        }
 
 
 
@@ -484,7 +485,7 @@ class Controller extends \Piwik\Plugin\Controller
     /**
      * Calculate Innodb Bufferpool usage in DB
      *
-     * @return object
+     * @return array
      */
      function getBufferpoolTest() {
 
@@ -601,7 +602,7 @@ class Controller extends \Piwik\Plugin\Controller
     /**
      * Run DB tests and Visualize
      *
-     * @return object
+     * @return string
      */
      function getPerfChecks() {
         $api = new DBHealthAPI();
@@ -634,10 +635,9 @@ class Controller extends \Piwik\Plugin\Controller
     /**
      *  PHP getPhpRealpathCacheSettings
      *
-     * @return object
+     * @return array
      */
      function getPhpRealpathCacheSettings() {
-        $result = [];
         $result = ["realpath_cache_size" => ini_get('realpath_cache_size') , "realpath_cache_ttl" => ini_get('realpath_cache_ttl')];
         return $result;
     }
@@ -650,14 +650,15 @@ class Controller extends \Piwik\Plugin\Controller
         if (!extension_loaded('xdebug')) {
             return false;
         }
-        else
+        else {
             return true;
+        }
     }
 
     /**
      *  PHP Mem info
      *
-     * @return object
+     * @return array
      */
      function getPhpMemInfo() {
         $result = [];
@@ -687,96 +688,160 @@ class Controller extends \Piwik\Plugin\Controller
         $query = "SELECT 1";
         $result = $db::fetchAll($query);
 
-        $time_end = hrtime(true);
-        $time = $time_end  - $time_start;
-        return  $time/1e+6;
-    }
-
-      /**
-     * Visualize Table Status Variables
-     *
-     * @return object
-     */
-    public function showProblematicSegments() {
-        //Log::debug("A user accessed getMysqlVariableData()");
-        try {
-            $api = new DBHealthAPI();
-            return $this->renderTemplate(
-                'segments',
-                [
-                    'dataTable' =>  $api->getProblematicSegments()
-
-                ]
-            );
-
-        } catch (\Exception $e) {
-            return $e->getMessage();
-        }
-    }
+         $time_end = hrtime(true);
+         $time = $time_end - $time_start;
+         return $time / 1e+6;
+     }
 
     /**
      * Visualize Table Status Variables
      *
-     * @return object
+     * @return string
      */
-    public function getMysqlTableStatus() {
-        //Log::debug("A user accessed getMysqlVariableData()");
-        try {
-            $api = new DBHealthAPI();
-            return $this->renderTemplate(
-                'index',
-                [
-                    'dataTable' =>  $api->getMysqlTableStatus()
+    public function getProblematicSegments()
+    {
+        $view = \Piwik\ViewDataTable\Factory::build(
+            $defaultType = 'table',
+            $apiAction = 'DBHealth.getProblematicSegments',
+            $controllerMethod = 'DBHealth.getProblematicSegments'
+        );
+        $view->config->show_search = false;
+        $view->config->show_bar_chart = false;
+        $view->config->show_pie_chart = false;
+        $view->config->show_tag_cloud = false;
+        $view->config->no_data_message = "No potentially problematic segments";
 
-                ]
-            );
-
-        } catch (\Exception $e) {
-            return $e->getMessage();
-        }
+        $view->config->title = "List of potentially problematic segments in your Matomo installation";
+        return $view->render();
     }
 
-      /**
+
+    public function showProblematicSegments()
+    {
+        $_GET['showtitle'] = '1';
+        Piwik::checkUserHasSuperUserAccess();
+        $view = new View("@DBHealth/segments.twig");
+        // Generate the report visualization to use it in the view
+        $this->setGeneralVariablesView($view);
+        $view->report = $this->getProblematicSegments();
+        return $view->render();
+    }
+
+
+
+    /**
+     * Visualize Table Status Variables
+     *
+     * @return string
+     */
+    public function getMysqlTableStatus()
+    {
+        $view = \Piwik\ViewDataTable\Factory::build(
+            $defaultType = 'table',
+            $apiAction = 'DBHealth.getMysqlTableStatus',
+            $controllerMethod = 'DBHealth.getMysqlTableStatus'
+        );
+        $view->config->show_search = false;
+        $view->config->show_bar_chart = false;
+        $view->config->show_pie_chart = false;
+        $view->config->show_tag_cloud = false;
+
+        $view->config->title = "Test";
+        $view->config->description = "Description";
+        return $view->render();
+    }
+
+
+    /**
+     *
+     * @return string
+     */
+    public function showMysqlTableStatus()
+    {
+        $_GET['showtitle'] = '1';
+        Piwik::checkUserHasSuperUserAccess();
+        $view = new View("@DBHealth/index.twig");
+        // Generate the report visualization to use it in the view
+        $this->setGeneralVariablesView($view);
+        $view->report = $this->getMysqlTableStatus();
+        return $view->render();
+
+    }
+
+    /**
      * Visualize Setting Variables
      *
-     * @return object
+     * @return string
      */
-    public function getMysqlVariableData() {
-        //Log::debug("A user accessed getMysqlVariableData()");
-        try {
-            $api = new DBHealthAPI();
-            return $this->renderTemplate(
-                'index',
-                [
-                    'dataTable' =>  $api->getMysqlVariableData()
+    public function getMysqlVariableData()
+    {
+        $view = \Piwik\ViewDataTable\Factory::build(
+            $defaultType = 'table',
+            $apiAction = 'DBHealth.getMysqlVariableData',
+            $controllerMethod = 'DBHealth.getMysqlVariableData'
+        );
+        $view->config->show_search = false;
+        $view->config->show_bar_chart = false;
+        $view->config->show_pie_chart = false;
+        $view->config->show_tag_cloud = false;
 
-                ]
-            );
-
-        } catch (\Exception $e) {
-            return $e->getMessage();
-        }
+        $view->config->title = "Test";
+        $view->config->description = "Description";
+        return $view->render();
     }
-      /**
+
+    /**
+     *
+     * @return string
+     */
+    public function showMysqlVariableData()
+    {
+        $_GET['showtitle'] = '1';
+        Piwik::checkUserHasSuperUserAccess();
+        $view = new View("@DBHealth/index.twig");
+        // Generate the report visualization to use it in the view
+        $this->setGeneralVariablesView($view);
+        $view->report = $this->getMysqlVariableData();
+        return $view->render();
+
+    }
+
+
+    /**
      * Visualize Status Variables
      *
-     * @return object
+     * @return string
      */
-    public function getMysqlStatus() {
-        //Log::debug("A user accessed getMysqlstatus()");
-        try {
-            $api = new DBHealthAPI();
-            return $this->renderTemplate(
-                'index',
-                [
-                    'dataTable' =>  $api->getMysqlStatusData()
+    public function getMysqlStatusData()
+    {
+        $view = \Piwik\ViewDataTable\Factory::build(
+            $defaultType = 'table',
+            $apiAction = 'DBHealth.getMysqlStatusData',
+            $controllerMethod = 'DBHealth.getMysqlStatusData'
+        );
+        $view->config->show_search = false;
+        $view->config->show_bar_chart = false;
+        $view->config->show_pie_chart = false;
+        $view->config->show_tag_cloud = false;
 
-                ]
-            );
-
-        } catch (\Exception $e) {
-            return $e->getMessage();
-        }
+        $view->config->title = "Test";
+        $view->config->description = "Description";
+        return $view->render();
     }
 
+    /**
+     *
+     * @return string
+     */
+    public function showMysqlStatusData()
+    {
+        $_GET['showtitle'] = '1';
+        Piwik::checkUserHasSuperUserAccess();
+        $view = new View("@DBHealth/index.twig");
+        // Generate the report visualization to use it in the view
+        $this->setGeneralVariablesView($view);
+        $view->report = $this->getMysqlStatusData();
+        return $view->render();
+
+    }
 }
